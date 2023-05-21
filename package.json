@@ -1,7 +1,7 @@
 {
-  "name": "bb-practicum-team-1-back",
+  "name": "bb-practicum-team-2-back",
   "version": "1.0.0",
-  "description": "Back-End Repo for Team 1 of Baboon/Bald Eagle Practicum",
+  "description": "Back-End Repo for Team 2 of Cockatoo/Chimp Practicum",
   "main": "app.ts",
   "scripts": {
     "start": "node ./dist/server.js",

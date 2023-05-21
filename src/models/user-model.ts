@@ -1,6 +1,9 @@
 // classes from mongoose
 import { Schema, model } from "mongoose";
 
+//import jwt to create tokens for user
+const jwt = require("jsonwebtoken");
+
 // check to see if email is in its valid format
 const validator = require("validator");
 
@@ -37,9 +40,24 @@ const UserSchema = new Schema<Iuser>({
 
 UserSchema.pre("save", async function (next) {
   if (!this.isModified("password")) next();
-  this.password = await bcrypt.hash(this.password, 12);
+  const salt = await bcrypt.genSalt(10);
+  this.password = await bcrypt.hash(this.password, salt);
   next();
 });
+
+UserSchema.methods.createJWT = function () {
+  return jwt.sign(
+    { userId: this._id, userName: this.userName, email: this.email},
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRES_IN,
+    }
+  )}
+
+  UserSchema.methods.comparePassword = async function (userPassword: any) {
+    const isMatch = await bcrypt.compare(userPassword, this.password)
+    return isMatch
+  }
 
 const User = model<Iuser>("User", UserSchema);
 export {};
