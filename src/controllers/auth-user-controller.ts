@@ -1,41 +1,60 @@
 import { Request, Response, NextFunction } from "express";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
-const AppError = require('../../utils/custom-error');
-
+const AppError = require("../../utils/custom-error");
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+    const { userName, email, password } = req.body;
 
-    const user = await User.create(req.body);
-    const token = user.createJWT();
-    res.status(201).json({
-      msg: `the user ${user.userName} was created`, 
-      success:'signUp',
-      token, });
-
-  })
+    if (!userName || !email || !password) {
+      throw new AppError("Invalid Credentials", 400);
+    }
+    const user = await User.create({ userName, email, password });
+    res.status(201).json({ message: "User successfully created" });
+  }
+);
 
 exports.logIn = catchAsync(
-    async (req: Request, res: Response, next: NextFunction) => {
-      const {userName, email,password} = req.body
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userName, password } = req.body;
 
-      if (!email ||!password) {
-        return next (new AppError('Please provide email and password', 404));
-      }
-      
-      const user = await User.findOne({email});
+    if (!userName || !password) {
+      throw new AppError("Invalid Credentials", 400);
+    }
 
-      const isPasswordCorrect = await user.comparePassword(password)
-      if (!isPasswordCorrect) {
-        console.log('the password is wrong');
-        throw next( new AppError('Wrong Password', 404))}
+    const user = await User.findOne({ userName });
 
-      const token = user.createJWT();
+    if (!user) {
+      throw new AppError("Invalid username or password", 400);
+    }
 
-      res.status(200).json({
-        msg: `the user ${user.userName} has logged in`, 
-        success:'logIn',
-        token, });
-  
-  });
+    const isMatch = await user.comparePassword(password);
+
+    if (!isMatch) {
+      throw new AppError("Invalid email or password", 400);
+    }
+
+    const accessToken = user.createJWT();
+
+    res
+      .status(200)
+      .json({ message: "User successfully authenticated", accessToken });
+  }
+);
+
+exports.logOut = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    if (req.user) {
+      req.logout((err) => {
+        if (err) {
+          throw new AppError("Something went wrong, please try again", 500);
+        }
+        return res
+          .status(200)
+          .json({ message: "User logged out successfully" });
+      });
+    }
+    res.status(400).json({ message: "Log out failed" });
+  }
+);
