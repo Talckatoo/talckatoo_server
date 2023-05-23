@@ -15,6 +15,7 @@ interface Iuser {
   userName: String;
   email: String;
   password: String;
+  googleId: String;
 }
 
 //user schema
@@ -33,8 +34,10 @@ const UserSchema = new Schema<Iuser>({
   },
   password: {
     type: String,
-    required: true,
     minlength: 5,
+  },
+  googleId: {
+    type: String,
   },
 });
 
@@ -47,17 +50,18 @@ UserSchema.pre("save", async function (next) {
 
 UserSchema.methods.createJWT = function () {
   return jwt.sign(
-    { userId: this._id, userName: this.userName, email: this.email},
+    { userId: this._id, userName: this.userName, email: this.email },
     process.env.JWT_SECRET,
     {
       expiresIn: process.env.JWT_EXPIRES_IN,
     }
-  )}
+  );
+};
 
-  UserSchema.methods.comparePassword = async function (userPassword: any) {
-    const isMatch = await bcrypt.compare(userPassword, this.password)
-    return isMatch
-  }
+UserSchema.methods.comparePassword = async function (userPassword: any) {
+  const isMatch = await bcrypt.compare(userPassword, this.password);
+  return isMatch;
+};
 
 const User = model<Iuser>("User", UserSchema);
 export {};

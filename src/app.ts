@@ -31,7 +31,11 @@ app.use(passport.session());
 
 // routes
 app.use("/api/v1/users", userRouter);
-app.use("/api/v1/", passport.authenticate("jwt"), mainRouter);
+app.use(
+  "/api/v1/",
+  passport.authenticate(["jwt", "google"], { scope: ["profile", "email"] }),
+  mainRouter
+);
 
 // handle requests that do not exist on our server
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
