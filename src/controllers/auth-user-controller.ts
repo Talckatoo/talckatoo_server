@@ -21,7 +21,7 @@ exports.logIn = catchAsync(
       const {userName, email,password} = req.body
 
       if (!email ||!password) {
-        return next (AppError('Please provide email and password', 404));
+        return next (new AppError('Please provide email and password', 404));
       }
       
       const user = await User.findOne({email});
@@ -29,7 +29,7 @@ exports.logIn = catchAsync(
       const isPasswordCorrect = await user.comparePassword(password)
       if (!isPasswordCorrect) {
         console.log('the password is wrong');
-        throw next( AppError('Wrong Password', 404))}
+        throw next( new AppError('Wrong Password', 404))}
 
       const token = user.createJWT();
 
