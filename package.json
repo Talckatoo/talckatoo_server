@@ -1,21 +1,31 @@
 {
-  "name": "bb-practicum-team-1-back",
+  "name": "bb-practicum-team-2-back",
   "version": "1.0.0",
-  "description": "Back-End Repo for Team 1 of Baboon/Bald Eagle Practicum",
-  "main": "app.js",
+  "description": "Back-End Repo for Team 2 of Cockatoo/Chimp Practicum",
+  "main": "app.ts",
   "scripts": {
-    "dev": "nodemon src/server.js"
+    "start": "node ./dist/server.js",
+    "build": "tsc",
+    "dev": "nodemon ./src/server.ts"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
     "express": "^4.18.2",
     "express-favicon": "^2.0.4",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.1",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "validator": "^13.9.0"
   },
   "devDependencies": {
-    "nodemon": "^2.0.21"
+    "@types/express": "^4.17.17",
+    "@types/mongoose": "^5.11.97",
+    "@types/node": "^20.2.1",
+    "nodemon": "^2.0.21",
+    "typescript": "^5.0.4"
   }
 }
