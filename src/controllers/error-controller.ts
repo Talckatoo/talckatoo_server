@@ -5,7 +5,10 @@ const handleCastErrorDb = (err: any) => {
   return new AppError(message, 400);
 };
 const handleDuplicateKeyDb = (err: any) => {
-  const message = `dupliacte field value "${err.keyValue.name}" please use another value`;
+  console.log(`This error handler called handleDuplicateKey is being used`)
+  console.log(`the error is`, err);
+  const message = `dupliacte field value "${err.keyValue.userName}" please use another value`;
+  console.log(`${message}`);
   return new AppError(message, 400);
 };
 const handleValidationErrorDb = (err: any) => {
@@ -41,6 +44,8 @@ const sendErrorDev = (err: any, res: Response) => {
     stack: err.stack,
     error: err,
   });
+
+  console.log(err.statusCode)
 };
 
 exports.globalErrorHandler = (
@@ -56,12 +61,19 @@ exports.globalErrorHandler = (
     sendErrorProd(err, res);
   } else if (process.env.NODE_ENV === "development") {
     let error = { ...err };
+    console.log(error);
+    console.log(error.code);
     if (err.name === "CastError") error = handleCastErrorDb(error);
     if (error.code === 11000) error = handleDuplicateKeyDb(error);
     if (err.name === "ValidationError") error = handleValidationErrorDb(error);
     if (error.name === "JsonWebTokenError") error = handleError();
     if (error.name === "TokenExpiredError") error = handleJwtExpired();
-    sendErrorDev(err, res);
+    
+    console.log('the error is', error);
+    console.log('the err is');
+
+    sendErrorDev(error, res);
+    
   }
 };
 export {};
