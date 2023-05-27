@@ -4,7 +4,7 @@ const catchAsync = require("../../utils/catch-async");
 
 exports.mainController = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    res.status(201).json({
+    res.status(200).json({
       success: "hello you're welcome to my Api",
     });
   }

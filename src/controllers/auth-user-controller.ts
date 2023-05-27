@@ -44,24 +44,24 @@ exports.logIn = catchAsync(
   }
 );
 
-exports.loginWithGoogle = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    return passport.authenticate("google", { scope: ["profile", "email"] })(
-      req,
-      res,
-      next
-    );
-  }
-);
+// exports.loginWithGoogle = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     return passport.authenticate("google", {
+//       scope: ["profile", "email"],
+//       session: true,
+//     })(req, res, next);
+//   }
+// );
 
-exports.redirectHome = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    return passport.authenticate("google", {
-      scope: ["profile", "email"],
-      failureRedirect: "/api/v1/users/auth/google",
-    })(req, res, next);
-  }
-);
+// exports.redirectHome = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     return passport.authenticate("google", {
+//       scope: ["profile", "email"],
+//       session: true,
+//       failureRedirect: "/api/v1/users/auth/google",
+//     })(req, res, next);
+//   }
+// );
 
 exports.logOut = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {

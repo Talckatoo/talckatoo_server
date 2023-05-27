@@ -10,16 +10,16 @@ import {
   VerifiedCallback,
 } from "passport-jwt";
 
-const GoogleOauthStrategy = require("passport-google-oauth20").Strategy;
+// import { VerifyCallback } from "passport-google-oauth20";
+
+// const GoogleOauthStrategy = require("passport-google-oauth20").Strategy;
 
 passport.serializeUser((user: any, done: any) => {
-  // console.log("fire in serialize"); LOGS TO CONSOLE
-  return done(null, user._id); // ERROR OCCURS HERE
+  return done(null, user._id);
 });
 
 passport.deserializeUser(async (id: any, done: any) => {
   try {
-    // console.log("fire in deserialize"); DOES NOT GET LOGGED
     const user = await User.findOne({ _id: id });
     if (user) {
       return done(null, user);
@@ -55,46 +55,46 @@ passport.use(
   )
 );
 
-const googleOptions = {
-  clientID: process.env.GOOGLE_CLIENT_ID,
-  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-  callbackURL: process.env.CALLBACK_URL,
-  scope: ["profile", "email"],
-};
+// const googleOptions = {
+//   clientID: process.env.GOOGLE_CLIENT_ID,
+//   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//   callbackURL: process.env.CALLBACK_URL,
+//   scope: ["profile", "email"],
+// };
 
-passport.use(
-  new GoogleOauthStrategy(
-    googleOptions,
-    async (
-      _accessToken: any,
-      _refreshToken: any,
-      profile: any,
-      done: VerifiedCallback
-    ) => {
-      try {
-        let user = await User.findOne({
-          googleId: profile.id,
-        });
+// passport.use(
+//   new GoogleOauthStrategy(
+//     googleOptions,
+//     async (
+//       _accessToken: any,
+//       _refreshToken: any,
+//       profile: any,
+//       done: VerifyCallback
+//     ) => {
+//       try {
+//         let user = await User.findOne({
+//           googleId: profile.id,
+//         });
 
-        if (!user) {
-          user = await User.create({
-            googleId: profile.id,
-            userName: profile.displayName,
-            email: profile.emails[0]?.value,
-          });
-        }
+//         if (!user) {
+//           user = await User.create({
+//             googleId: profile.id,
+//             userName: profile.displayName,
+//             email: profile.emails[0]?.value,
+//           });
+//         }
 
-        if (user) {
-          return done(null, user);
-        } else {
-          return done(null, false);
-        }
-      } catch (err: any) {
-        return done(err, false);
-      }
-    }
-  )
-);
+//         if (user) {
+//           return done(null, user);
+//         } else {
+//           return done(null, false);
+//         }
+//       } catch (err: any) {
+//         return done(err, false);
+//       }
+//     }
+//   )
+// );
 
 export {};
 module.exports = passport;

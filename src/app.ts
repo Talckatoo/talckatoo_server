@@ -33,7 +33,7 @@ app.use(passport.session());
 app.use("/api/v1/users", userRouter);
 app.use(
   "/api/v1/",
-  passport.authenticate(["jwt", "google"], { scope: ["profile", "email"] }),
+  passport.authenticate(["jwt"], { session: true }),
   mainRouter
 );
 
