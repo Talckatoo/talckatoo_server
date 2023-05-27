@@ -1,11 +1,13 @@
 const AppError = require("../../utils/custom-error");
+
 import { Request, Response, NextFunction } from "express";
+
 const handleCastErrorDb = (err: any) => {
   const message = `invalid ${err.path}: ${err.value}.`;
   return new AppError(message, 400);
 };
 const handleDuplicateKeyDb = (err: any) => {
-  const message = `dupliacte field value "${err.keyValue.name}" please use another value`;
+  const message = `dupliacte field value "${err.keyValue.userName}" please use another value`;
   return new AppError(message, 400);
 };
 const handleValidationErrorDb = (err: any) => {
@@ -19,8 +21,7 @@ const handleJwtExpired = () =>
   new AppError("your token is expired please login again", 401);
 
 const sendErrorProd = (err: any, res: Response) => {
-  console.log("just testing right herre");
-  console.log(err);
+
   if (err.isOperational) {
     res.status(err.statusCode).json({
       status: err.status,
@@ -41,6 +42,7 @@ const sendErrorDev = (err: any, res: Response) => {
     stack: err.stack,
     error: err,
   });
+
 };
 
 exports.globalErrorHandler = (
@@ -49,6 +51,7 @@ exports.globalErrorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+
   err.statusCode = err.statusCode || 500;
   err.status = err.status || "fail";
 
@@ -56,12 +59,19 @@ exports.globalErrorHandler = (
     sendErrorProd(err, res);
   } else if (process.env.NODE_ENV === "development") {
     let error = { ...err };
+
     if (err.name === "CastError") error = handleCastErrorDb(error);
     if (error.code === 11000) error = handleDuplicateKeyDb(error);
     if (err.name === "ValidationError") error = handleValidationErrorDb(error);
     if (error.name === "JsonWebTokenError") error = handleError();
     if (error.name === "TokenExpiredError") error = handleJwtExpired();
-    sendErrorDev(err, res);
+    
+    if (!error.message) {
+      error.message = err.message;
+    }
+
+    sendErrorDev(error, res);
+    
   }
 };
 export {};

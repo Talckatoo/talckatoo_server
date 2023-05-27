@@ -18,18 +18,21 @@ exports.signUp = catchAsync(
 
 exports.logIn = catchAsync(
     async (req: Request, res: Response, next: NextFunction) => {
-      const {userName, email,password} = req.body
+      const {email,password} = req.body
 
       if (!email ||!password) {
         return next (new AppError('Please provide email and password', 404));
       }
       
       const user = await User.findOne({email});
+      if (!user) {
+        throw next( new AppError('A user with this email address could not be found. Please double check the spelling of this user', 404))}
+
 
       const isPasswordCorrect = await user.comparePassword(password)
       if (!isPasswordCorrect) {
-        console.log('the password is wrong');
-        throw next( new AppError('Wrong Password', 404))}
+
+        throw next( new AppError('User was identified, but this looks like the wrong password. Please double check your password', 404))}
 
       const token = user.createJWT();
 
