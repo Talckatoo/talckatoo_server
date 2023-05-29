@@ -9,7 +9,7 @@ exports.signUp = catchAsync(
     const { userName, email, password } = req.body;
 
     if (!userName || !email || !password) {
-      throw new AppError("Invalid Credentials", 400);
+      throw new AppError("The user is either missing the username, the email, or the password...Please double check these entries", 400);
     }
     const user = await User.create({ userName, email, password });
     res.status(201).json({ message: "User successfully created" });
@@ -18,29 +18,32 @@ exports.signUp = catchAsync(
 
 exports.logIn = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { userName, password } = req.body;
+    const { email, password } = req.body;
 
-    if (!userName || !password) {
-      throw new AppError("Invalid Credentials", 400);
+    if (!email || !password) {
+      throw new AppError("Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.", 400);
     }
 
-    const user = await User.findOne({ userName });
+    const user = await User.findOne({ email });
 
     if (!user) {
-      throw new AppError("Invalid username or password", 400);
+      throw new AppError(" The user for this email could not be found.", 400);
     }
 
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      throw new AppError("Invalid email or password", 400);
+      throw new AppError("The password or username is wrong", 400);
     }
 
-    const accessToken = user.createJWT();
+    const token = user.createJWT();
 
     res
       .status(200)
-      .json({ message: "User successfully authenticated", accessToken });
+      .json({ 
+        msg: "User successfully authenticated",
+        success: 'login',
+        token });
   }
 );
 
@@ -68,6 +71,7 @@ exports.logOut = catchAsync(
     if (req.user) {
       req.logout((err) => {
         if (err) {
+          console.log(err);
           throw new AppError("Something went wrong, please try again", 500);
         }
         return res
