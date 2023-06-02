@@ -69,7 +69,7 @@ exports.createMessage = catchAsync(
     });
 
     let conversation = await Conversation.findOneAndUpdate(
-      { users: [from, to] },
+      { users: { $all: [from, to] } },
       { $push: { messages: message.id } }
     );
 
@@ -86,7 +86,7 @@ exports.createMessage = catchAsync(
 
 exports.editMessage = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // const { userId } = req.user;
+    const { user }: any = req;
     const { messageId } = req.params;
     const { message: text } = req.body;
 
@@ -100,9 +100,9 @@ exports.editMessage = catchAsync(
       throw new AppError("This message does not exist", 404);
     }
 
-    // if (userId != message.sender.toString()) {
-    //   throw new AppError("Not authorized to modify this resource", 403);
-    // }
+    if (user.userId != message.sender.toString()) {
+      throw new AppError("Not authorized to modify this resource", 403);
+    }
 
     await Message.updateOne({ _id: messageId }, { $set: { message: text } });
 
@@ -112,7 +112,7 @@ exports.editMessage = catchAsync(
 
 exports.deleteMessage = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    // const { userId } = req.user;
+    const { user }: any = req;
     const { messageId } = req.params;
 
     const message = await Message.findOne({ _id: messageId });
@@ -121,9 +121,9 @@ exports.deleteMessage = catchAsync(
       throw new AppError("This message does not exist", 404);
     }
 
-    // if (userId != message.sender.toString()) {
-    //   throw new AppError("Not authorized to delete this resource", 403);
-    // }
+    if (user.userId != message.sender.toString()) {
+      throw new AppError("Not authorized to delete this resource", 403);
+    }
 
     await Conversation.findOneAndUpdate(
       { messages: message.id },
