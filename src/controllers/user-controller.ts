@@ -58,7 +58,7 @@ exports.getUserConversation = catchAsync(
 
     const populateOptions = [
       { path: "users", select: "userName" },
-      { path: "messages", select: "message" },
+      { path: "messages", select: "message sender" },
     ];
 
     const conversation = await Conversation.findOne({
