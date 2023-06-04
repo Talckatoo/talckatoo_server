@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 const AppError = require("../../utils/custom-error");
+const User = require("../models/user-model");
 const Conversation = require("../models/conversation-model");
 const Message = require("../models/message-model");
 const catchAsync = require("../../utils/catch-async");
@@ -63,6 +64,10 @@ exports.createMessage = catchAsync(
       throw new AppError("Invalid Input. Please try again", 400);
     }
 
+    if (to === from) {
+      throw new AppError("You can't send a message to yourself", 403);
+    }
+
     const message = await Message.create({
       message: text,
       sender: from,
@@ -78,6 +83,16 @@ exports.createMessage = catchAsync(
         messages: [message.id],
         users: [from, to],
       });
+
+      const currentUser = await User.findOneAndUpdate(
+        { _id: from },
+        { $push: { conversations: conversation.id } }
+      );
+
+      const messagedUser = await User.findOneAndUpdate(
+        { _id: to },
+        { $push: { conversations: conversation.id } }
+      );
     }
 
     res.status(201).json({ status: "Success" });
@@ -86,7 +101,7 @@ exports.createMessage = catchAsync(
 
 exports.editMessage = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { user }: any = req;
+    const { userId }: any = req.user;
     const { messageId } = req.params;
     const { message: text } = req.body;
 
@@ -100,7 +115,7 @@ exports.editMessage = catchAsync(
       throw new AppError("This message does not exist", 404);
     }
 
-    if (user.userId != message.sender.toString()) {
+    if (userId != message.sender.toString()) {
       throw new AppError("Not authorized to modify this resource", 403);
     }
 
@@ -112,7 +127,7 @@ exports.editMessage = catchAsync(
 
 exports.deleteMessage = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { user }: any = req;
+    const { userId }: any = req.user;
     const { messageId } = req.params;
 
     const message = await Message.findOne({ _id: messageId });
@@ -121,7 +136,7 @@ exports.deleteMessage = catchAsync(
       throw new AppError("This message does not exist", 404);
     }
 
-    if (user.userId != message.sender.toString()) {
+    if (userId != message.sender.toString()) {
       throw new AppError("Not authorized to delete this resource", 403);
     }
 

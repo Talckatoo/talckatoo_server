@@ -6,7 +6,9 @@ const AppError = require("../../utils/custom-error");
 
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const users = await User.find({});
+    const { userId }: any = req.user;
+    const users = await User.find({}).select("_id userName conversations");
+    const currentUser = await User.findOne({ _id: userId });
 
     if (users.length < 1) {
       res
@@ -14,7 +16,24 @@ exports.getUsers = catchAsync(
         .json({ status: "Success", message: "There are currently no users" });
     }
 
-    res.status(200).json({ status: "Success", users });
+    const contactedUsers = users.filter((user: any) => {
+      return user.conversations.some((conversationId: any) => {
+        if (currentUser.conversations.includes(conversationId)) {
+          console.log(conversationId);
+        }
+        return currentUser.conversations.includes(conversationId);
+      });
+    });
+
+    const uncontactedUsers = users.filter((user: any) => {
+      return !user.conversations.some((conversationId: any) => {
+        return currentUser.conversations.includes(conversationId);
+      });
+    });
+
+    res
+      .status(200)
+      .json({ status: "Success", users: { contactedUsers, uncontactedUsers } });
   }
 );
 
@@ -58,7 +77,7 @@ exports.getUserConversation = catchAsync(
 
     const populateOptions = [
       { path: "users", select: "userName" },
-      { path: "messages", select: "message sender" },
+      { path: "messages", select: "message sender createdAt" },
     ];
 
     const conversation = await Conversation.findOne({

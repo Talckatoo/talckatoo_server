@@ -8,7 +8,7 @@ const {
   logOut,
   //loginWithGoogle,
   //redirectHome,
-} = require("../controllers/auth-controller");
+} = require("../controllers/account-controller");
 
 router.route("/sign-up").post(signUp);
 router.route("/log-in").post(logIn);
