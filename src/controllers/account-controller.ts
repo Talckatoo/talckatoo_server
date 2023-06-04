@@ -12,7 +12,9 @@ exports.signUp = catchAsync(
       throw new AppError("The user is either missing the username, the email, or the password...Please double check these entries", 400);
     }
     const user = await User.create({ userName, email, password });
-    res.status(201).json({ message: "User successfully created" });
+    const token = user.createJWT();
+
+    res.status(201).json({ message: "User successfully created" , token });
   }
 );
 
@@ -43,7 +45,8 @@ exports.logIn = catchAsync(
       .json({ 
         msg: "User successfully authenticated",
         success: 'login',
-        token });
+        token
+         });
   }
 );
 
