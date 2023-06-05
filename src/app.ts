@@ -9,6 +9,8 @@ const logger = require("morgan");
 const session = require("express-session");
 const passport = require("../utils/passport-config");
 const mainRouter = require("./routes/mainRouter");
+const messageRouter = require("./routes/message-router");
+const accountRouter = require("./routes/account-router");
 const userRouter = require("./routes/user-router");
 const { globalErrorHandler } = require("./../src/controllers/error-controller");
 
@@ -30,11 +32,24 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // routes
-app.use("/api/v1/users", userRouter);
+app.use("/api/v1/account", accountRouter);
+
+app.use(
+  "/api/v1/users",
+  passport.authenticate(["jwt"], { session: true }),
+  userRouter
+);
+
 app.use(
   "/api/v1/",
   passport.authenticate(["jwt"], { session: true }),
   mainRouter
+);
+
+app.use(
+  "/api/v1/",
+  passport.authenticate(["jwt"], { session: true }),
+  messageRouter
 );
 
 // handle requests that do not exist on our server

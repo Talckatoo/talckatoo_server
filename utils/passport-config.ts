@@ -15,7 +15,7 @@ import {
 // const GoogleOauthStrategy = require("passport-google-oauth20").Strategy;
 
 passport.serializeUser((user: any, done: any) => {
-  return done(null, user._id);
+  return done(null, user.userId);
 });
 
 passport.deserializeUser(async (id: any, done: any) => {
@@ -44,7 +44,7 @@ passport.use(
         const user = await User.findOne({ _id: jwt_payload.userId });
 
         if (user) {
-          return done(null, user);
+          return done(null, jwt_payload);
         } else {
           return done(null, false);
         }
