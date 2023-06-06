@@ -38,14 +38,36 @@ const onlineUsers = new Map<string, string>();
 
 io.on("connection", (socket: Socket) => {
   const chatSocket = socket;
-  socket.on("add-user", (userId) => {
-    onlineUsers.set(userId, socket.id);
+  console.log('we should have a connection');
+
+  socket.on("add-user", (data) => {
+    const { toUserId} = data;
+    onlineUsers.set(toUserId, socket.id);
+    console.log(`the event userId should be ${toUserId}`);
+    console.log(`the socket id should be ${socket.id}`);
+    console.log(`the onlineUsers are ${JSON.stringify(Array.from(onlineUsers))}`);
   });
 
   socket.on("send-msg", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
+    const {to, msg} = data;
+    const sendUserSocket = onlineUsers.get(to);
     if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("msg-recieve", data.msg);
+      console.log(`Confirming that to is ${to} and the message is ${msg}. The sendUserSocket variable says ${sendUserSocket} `);
+      socket.to(sendUserSocket).emit("msg-receive", msg);
     }
   });
+
+  socket.on("disconnect", () => {
+    // Remove the disconnected socket from onlineUsers map
+    for (const [userId, socketId] of onlineUsers) {
+      console.log('this is getting activated')
+      if (socketId === socket.id) {
+        console.log(`deleting data from socket ${socketId}`)
+        onlineUsers.delete(userId);
+        break;
+      }
+    }
+    console.log(`Socket disconnected: ${socket.id}`);
+    console.log(`Updated onlineUsers: ${JSON.stringify(Array.from(onlineUsers))}`);
+  })
 });
