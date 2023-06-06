@@ -53,7 +53,7 @@ io.on("connection", (socket: Socket) => {
     const sendUserSocket = onlineUsers.get(to);
     if (sendUserSocket) {
       console.log(`Confirming that to is ${to} and the message is ${msg}. The sendUserSocket variable says ${sendUserSocket} `);
-      socket.to(sendUserSocket).emit("msg-receive", msg);
+      socket.to(sendUserSocket).emit("msg-receive", data);
     }
   });
 
