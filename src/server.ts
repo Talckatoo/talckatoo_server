@@ -29,7 +29,7 @@ const server = app.listen(PORT, listener);
 
 const io = socket(server, {
   cors: {
-    origin: "http://localhost:3000",
+    origin: "http://localhost:5173",
     credentials: true,
   },
 });
@@ -37,23 +37,17 @@ const io = socket(server, {
 const onlineUsers = new Map<string, string>();
 
 io.on("connection", (socket: Socket) => {
-  const chatSocket = socket;
   console.log('we should have a connection');
 
-  socket.on("add-user", (data) => {
-    const { toUserId} = data;
-    onlineUsers.set(toUserId, socket.id);
-    console.log(`the event userId should be ${toUserId}`);
-    console.log(`the socket id should be ${socket.id}`);
-    console.log(`the onlineUsers are ${JSON.stringify(Array.from(onlineUsers))}`);
+  socket.on("addUser", (userId) => {
+    onlineUsers.set(userId, socket.id);
+    socket.emit("getUsers", Array.from(onlineUsers));
   });
-
-  socket.on("send-msg", (data) => {
-    const {to, msg} = data;
-    const sendUserSocket = onlineUsers.get(to);
+  
+  socket.on("sendMessage", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
-      console.log(`Confirming that to is ${to} and the message is ${msg}. The sendUserSocket variable says ${sendUserSocket} `);
-      socket.to(sendUserSocket).emit("msg-receive", data);
+      socket.to(sendUserSocket).emit("getMessage", data);
     }
   });
 
