@@ -7,9 +7,11 @@ const {
   getUser,
   getUserConversations,
   getUserConversation,
+  updateProfile,
 } = require("../controllers/user-controller");
 
 router.route("/").get(getUsers);
+router.route("/:userId/update-user").patch(updateProfile);
 router.route("/:userId").get(getUser);
 router.route("/:userId/conversations").get(getUserConversations);
 router.route("/:userId/conversations/:conversationId").get(getUserConversation);

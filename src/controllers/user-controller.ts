@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
+const multiparty = require("multiparty");
 const User = require("../models/user-model");
 const Conversation = require("../models/conversation-model");
 const catchAsync = require("../../utils/catch-async");
 const AppError = require("../../utils/custom-error");
+const cloudinary = require("../../utils/cloudinary");
 
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -89,5 +91,43 @@ exports.getUserConversation = catchAsync(
     }
 
     res.status(200).json({ status: "Success", conversation });
+  }
+);
+
+exports.updateProfile = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+
+    const form = new multiparty.Form();
+
+    form.parse(req, async function (err: any, fields: any, files: any) {
+      let result: any;
+
+      if (files.image) {
+        result = await cloudinary.uploader.upload(files.image[0].path, {
+          folder: "profile",
+        });
+      }
+
+      const { userName, public_id } = fields;
+
+      if (public_id) cloudinary.uploader.destroy(public_id);
+
+      let updateObj: any = {
+        profileImage: { public_id: result?.public_id, url: result?.url },
+      };
+
+      if (!updateObj.profileImage.public_id) updateObj = {};
+
+      if (userName) updateObj.userName = userName[0];
+
+      const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
+        new: true,
+      });
+      res.status(200).json({
+        success: "true",
+        user,
+      });
+    });
   }
 );
