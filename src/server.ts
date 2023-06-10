@@ -41,6 +41,7 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
+    console.log('the online users are', Array.from(onlineUsers))
     socket.emit("getUsers", Array.from(onlineUsers));
   });
   
@@ -54,14 +55,11 @@ io.on("connection", (socket: Socket) => {
   socket.on("disconnect", () => {
     // Remove the disconnected socket from onlineUsers map
     for (const [userId, socketId] of onlineUsers) {
-      console.log('this is getting activated')
       if (socketId === socket.id) {
-        console.log(`deleting data from socket ${socketId}`)
         onlineUsers.delete(userId);
         break;
       }
     }
-    console.log(`Socket disconnected: ${socket.id}`);
-    console.log(`Updated onlineUsers: ${JSON.stringify(Array.from(onlineUsers))}`);
+    io.emit("getUsers", Array.from(onlineUsers));
   })
 });
