@@ -95,7 +95,7 @@ exports.createMessage = catchAsync(
       );
     }
 
-    res.status(201).json({ status: "Success" });
+    res.status(201).json({ status: "Success", message });
   }
 );
 
