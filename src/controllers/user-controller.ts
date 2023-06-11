@@ -79,7 +79,7 @@ exports.getUserConversation = catchAsync(
 
     const populateOptions = [
       { path: "users", select: "userName" },
-      { path: "messages", select: "message sender createdAt" },
+      { path: "messages", select: "message sender createdAt voiceNote" },
     ];
 
     const conversation = await Conversation.findOne({
