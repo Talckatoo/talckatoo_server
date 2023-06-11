@@ -41,8 +41,8 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
-    console.log('the online users are', Array.from(onlineUsers))
-    socket.emit("getUsers", Array.from(onlineUsers));
+    console.log('the online users are', Array.from(onlineUsers));
+    io.emit("getUsers", Array.from(onlineUsers));
   });
   
   socket.on("sendMessage", (data) => {
