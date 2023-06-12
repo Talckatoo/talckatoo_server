@@ -104,9 +104,22 @@ exports.updateProfile = catchAsync(
       let result: any;
 
       if (files.image) {
-        result = await cloudinary.uploader.upload(files.image[0].path, {
-          folder: "profile",
-        });
+        if (
+          files.image[0].originalFilename.substr(-4, 4) !== ".png" ||
+          files.image[0].originalFilename.substr(-4, 4) !== ".jpg" ||
+          files.image[0].originalFilename.substr(-4, 4) !== "jpeg"
+        ) {
+          return next(
+            new AppError(
+              "the only image format accepted are .jpg, .png and .jpeg",
+              422
+            )
+          );
+        } else {
+          result = await cloudinary.uploader.upload(files.image[0].path, {
+            folder: "profile",
+          });
+        }
       }
 
       const { userName, public_id } = fields;
@@ -124,6 +137,10 @@ exports.updateProfile = catchAsync(
       const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
         new: true,
       });
+      if (!user) {
+        return next(new AppError("No user found with the provided Id", 404));
+      }
+
       res.status(200).json({
         success: "true",
         user,
