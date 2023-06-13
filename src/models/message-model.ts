@@ -5,6 +5,10 @@ import { Schema, model } from "mongoose";
 interface Imessage {
   message: String;
   sender: String;
+  voiceNote?: {
+    public_id: String;
+    url: String;
+  };
 }
 
 // message schema
@@ -12,7 +16,6 @@ const messageSchema = new Schema<Imessage>(
   {
     message: {
       type: String,
-      required: true,
       minlength: 1,
       maxlength: 2000,
     },
@@ -20,6 +23,10 @@ const messageSchema = new Schema<Imessage>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    voiceNote: {
+      public_id: String,
+      url: String,
     },
   },
   { timestamps: true }
