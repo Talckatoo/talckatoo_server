@@ -9,7 +9,9 @@ const cloudinary = require("../../utils/cloudinary");
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId }: any = req.user;
-    const users = await User.find({}).select("_id userName conversations");
+    const users = await User.find({}).select(
+      "_id userName conversations profileImage"
+    );
     const currentUser = await User.findOne({ _id: userId });
 
     if (users.length < 1) {
@@ -57,7 +59,9 @@ exports.getUserConversations = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
 
-    const populateOptions = [{ path: "users", select: "userName _id" }];
+    const populateOptions = [
+      { path: "users", select: "userName _id profileImage" },
+    ];
 
     const conversations = await Conversation.find({ users: userId }).populate(
       populateOptions
@@ -78,7 +82,7 @@ exports.getUserConversation = catchAsync(
     const { conversationId } = req.params;
 
     const populateOptions = [
-      { path: "users", select: "userName" },
+      { path: "users", select: "userName profileImage" },
       { path: "messages", select: "message sender createdAt voiceNote" },
     ];
 
