@@ -11,12 +11,14 @@ const passport = require("../utils/passport-config");
 const mainRouter = require("./routes/mainRouter");
 const messageRouter = require("./routes/message-router");
 const accountRouter = require("./routes/account-router");
+// const authRouter = require("./routes/auth-router");
 const userRouter = require("./routes/user-router");
 const { globalErrorHandler } = require("./../src/controllers/error-controller");
 
 // middleware
 app.use(cors());
 app.use(express.json());
+
 app.use(express.urlencoded({ extended: false }));
 app.use(
   session({
@@ -32,6 +34,9 @@ app.use(passport.initialize());
 app.use(passport.session());
 
 // routes
+
+// app.use("/api/v1/auth", authRouter);
+
 app.use("/api/v1/account", accountRouter);
 
 app.use(

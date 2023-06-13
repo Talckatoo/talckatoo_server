@@ -17,6 +17,7 @@ interface Iuser {
   password: String;
   googleId: String;
   conversations: Array<String>;
+  profileImage: { public_id: String; url: String };
 }
 
 //user schema
@@ -46,6 +47,10 @@ const UserSchema = new Schema<Iuser>({
       ref: "Conversation",
     },
   ],
+  profileImage: {
+    public_id: String,
+    url: String,
+  },
 });
 
 UserSchema.pre("save", async function (next) {
