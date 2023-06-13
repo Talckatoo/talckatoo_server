@@ -1,8 +1,10 @@
 import { Request, Response, NextFunction } from "express";
+const multiparty = require("multiparty");
 const User = require("../models/user-model");
 const Conversation = require("../models/conversation-model");
 const catchAsync = require("../../utils/catch-async");
 const AppError = require("../../utils/custom-error");
+const cloudinary = require("../../utils/cloudinary");
 
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -89,5 +91,60 @@ exports.getUserConversation = catchAsync(
     }
 
     res.status(200).json({ status: "Success", conversation });
+  }
+);
+
+exports.updateProfile = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+
+    const form = new multiparty.Form();
+
+    form.parse(req, async function (err: any, fields: any, files: any) {
+      let result: any;
+
+      if (files.image) {
+        if (
+          files.image[0].originalFilename.substr(-4, 4) == ".png" ||
+          files.image[0].originalFilename.substr(-4, 4) == ".jpg" ||
+          files.image[0].originalFilename.substr(-4, 4) == "jpeg"
+        ) {
+          result = await cloudinary.uploader.upload(files.image[0].path, {
+            folder: "profile",
+          });
+        } else {
+          return next(
+            new AppError(
+              "the only image format accepted are .jpg, .png and .jpeg",
+              422
+            )
+          );
+        }
+      }
+
+      const { userName, public_id } = fields;
+
+      if (public_id) cloudinary.uploader.destroy(public_id);
+
+      let updateObj: any = {
+        profileImage: { public_id: result?.public_id, url: result?.url },
+      };
+
+      if (!updateObj.profileImage.public_id) updateObj = {};
+
+      if (userName) updateObj.userName = userName[0];
+
+      const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
+        new: true,
+      });
+      if (!user) {
+        return next(new AppError("No user found with the provided Id", 404));
+      }
+
+      res.status(200).json({
+        success: "true",
+        user,
+      });
+    });
   }
 );
