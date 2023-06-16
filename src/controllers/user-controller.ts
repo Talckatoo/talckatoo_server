@@ -9,35 +9,44 @@ const cloudinary = require("../../utils/cloudinary");
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId }: any = req.user;
-    const users = await User.find({}).select(
-      "_id userName conversations profileImage"
-    );
     const currentUser = await User.findOne({ _id: userId });
 
-    if (users.length < 1) {
+    const contactedUsers = await User.find({
+      _id: { $ne: currentUser._id },
+      conversations: { $in: currentUser.conversations },
+    }).select("_id userName conversations profileImage");
+
+    contactedUsers.forEach((user: any) => {
+      user.conversations = user.conversations.filter((conversationId: any) =>
+        currentUser.conversations.includes(conversationId)
+      );
+    });
+
+    const modifiedUsers = contactedUsers.map((user: any) => {
+      return {
+        _id: user._id,
+        userName: user.userName,
+        profileImage: user.profileImage,
+        conversation: user.conversations[0].toString(),
+        conversations: undefined,
+      };
+    });
+
+    const uncontactedUsers = await User.find({
+      _id: { $ne: currentUser._id },
+      conversations: { $nin: currentUser.conversations },
+    }).select("_id userName profileImage");
+
+    if (contactedUsers.length < 1 && uncontactedUsers.length < 1) {
       res
         .status(200)
         .json({ status: "Success", message: "There are currently no users" });
     }
 
-    const contactedUsers = users.filter((user: any) => {
-      return user.conversations.some((conversationId: any) => {
-        if (currentUser.conversations.includes(conversationId)) {
-          console.log(conversationId);
-        }
-        return currentUser.conversations.includes(conversationId);
-      });
+    res.status(200).json({
+      status: "Success",
+      users: { contactedUsers: modifiedUsers, uncontactedUsers },
     });
-
-    const uncontactedUsers = users.filter((user: any) => {
-      return !user.conversations.some((conversationId: any) => {
-        return currentUser.conversations.includes(conversationId);
-      });
-    });
-
-    res
-      .status(200)
-      .json({ status: "Success", users: { contactedUsers, uncontactedUsers } });
   }
 );
 
@@ -82,8 +91,8 @@ exports.getUserConversation = catchAsync(
     const { conversationId } = req.params;
 
     const populateOptions = [
-      { path: "users", select: "userName profileImage" },
-      { path: "messages", select: "message sender createdAt voiceNote" },
+      { path: "users", select: "userName" },
+      { path: "messages", select: "message sender createdAt" },
     ];
 
     const conversation = await Conversation.findOne({
