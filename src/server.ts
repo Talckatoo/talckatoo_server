@@ -51,6 +51,13 @@ io.on("connection", (socket: Socket) => {
     }
   });
 
+  socket.on("isTyping", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      socket.to(sendUserSocket).emit("isTyping", data);
+    }
+  });
+
   socket.on("disconnect", () => {
     // Remove the disconnected socket from onlineUsers map
     for (const [userId, socketId] of onlineUsers) {
