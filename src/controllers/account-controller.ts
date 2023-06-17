@@ -97,7 +97,6 @@ exports.logOut = catchAsync(
     if (req.user) {
       req.logout((err) => {
         if (err) {
-          console.log(err);
           throw new AppError("Something went wrong, please try again", 500);
         }
         return res
