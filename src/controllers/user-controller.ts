@@ -39,6 +39,24 @@ exports.getUsers = catchAsync(
       };
     });
 
+    modifiedUsers.sort((a: any, b: any) => {
+      if (
+        a.conversation["updatedAt"].getTime() <
+        b.conversation["updatedAt"].getTime()
+      ) {
+        return 1;
+      }
+
+      if (
+        a.conversation["updatedAt"].getTime() >
+        b.conversation["updatedAt"].getTime()
+      ) {
+        return -1;
+      }
+
+      return 0;
+    });
+
     const uncontactedUsers = await User.find({
       _id: { $ne: currentUser._id },
       conversations: { $nin: currentUser.conversations },
