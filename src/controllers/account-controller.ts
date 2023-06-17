@@ -9,12 +9,15 @@ exports.signUp = catchAsync(
     const { userName, email, password } = req.body;
 
     if (!userName || !email || !password) {
-      throw new AppError("The user is either missing the username, the email, or the password...Please double check these entries", 400);
+      throw new AppError(
+        "The user is either missing the username, the email, or the password...Please double check these entries",
+        400
+      );
     }
     const user = await User.create({ userName, email, password });
     const token = user.createJWT();
 
-    res.status(201).json({ message: "User successfully created" , token });
+    res.status(201).json({ message: "User successfully created", token });
   }
 );
 
@@ -23,7 +26,10 @@ exports.logIn = catchAsync(
     const { email, password } = req.body;
 
     if (!email || !password) {
-      throw new AppError("Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.", 400);
+      throw new AppError(
+        "Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.",
+        400
+      );
     }
 
     const user = await User.findOne({ email });
@@ -40,13 +46,11 @@ exports.logIn = catchAsync(
 
     const token = user.createJWT();
 
-    res
-      .status(200)
-      .json({ 
-        msg: "User successfully authenticated",
-        success: 'login',
-        token
-         });
+    res.status(200).json({
+      msg: "User successfully authenticated",
+      success: "login",
+      token,
+    });
   }
 );
 
@@ -74,7 +78,6 @@ exports.logOut = catchAsync(
     if (req.user) {
       req.logout((err) => {
         if (err) {
-          console.log(err);
           throw new AppError("Something went wrong, please try again", 500);
         }
         return res

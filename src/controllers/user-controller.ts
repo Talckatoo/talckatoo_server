@@ -11,15 +11,22 @@ exports.getUsers = catchAsync(
     const { userId }: any = req.user;
     const currentUser = await User.findOne({ _id: userId });
 
+    const populateOptions = {
+      path: "conversations",
+      select: "_id createdAt updatedAt",
+    };
+
     const contactedUsers = await User.find({
       _id: { $ne: currentUser._id },
       conversations: { $in: currentUser.conversations },
-    }).select("_id userName conversations profileImage");
+    })
+      .select("_id userName conversations profileImage")
+      .populate(populateOptions);
 
     contactedUsers.forEach((user: any) => {
-      user.conversations = user.conversations.filter((conversationId: any) =>
-        currentUser.conversations.includes(conversationId)
-      );
+      user.conversations = user.conversations.filter((conversation: any) => {
+        return currentUser.conversations.includes(conversation._id);
+      });
     });
 
     const modifiedUsers = contactedUsers.map((user: any) => {
@@ -27,7 +34,7 @@ exports.getUsers = catchAsync(
         _id: user._id,
         userName: user.userName,
         profileImage: user.profileImage,
-        conversation: user.conversations[0].toString(),
+        conversation: user.conversations[0],
         conversations: undefined,
       };
     });

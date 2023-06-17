@@ -7,7 +7,7 @@ interface Iconversation {
   users: Array<String>;
 }
 
-// message schema
+// conversation schema
 const conversationSchema = new Schema<Iconversation>(
   {
     messages: [
