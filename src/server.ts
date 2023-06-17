@@ -57,76 +57,59 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("sendMessageChatGPT", async (data: any) => {
     const { message: text, from, to: toFront } = data;
-
     const to = toFront ? toFront : process.env.AI_ASSISTANT_ID;
-
     const sendUserSocket = toFront
-      ? onlineUsers.get(to)
-      : onlineUsers.get(from);
-
-    console.log(to);
-    console.log(from);
+      ? onlineUsers.get(from)
+      : onlineUsers.get(to);
 
     if (!text || !to || !from) {
       throw new AppError("Invalid Input. Please try again", 400);
     }
-
     if (to === from) {
-      throw new AppError("You can't send a message to yourself", 403);
+      throw new AppError("You can’t send a message to yourself", 403);
     }
-
-    if (toFront) socket.to(sendUserSocket).emit("getMessage", data);
-    console.log(text);
+    const selectUserSocket = onlineUsers.get(to);
+    if (toFront) io.to(selectUserSocket).emit("getMessage", data);
     const message = await Message.create({
       message: text,
       sender: from,
     });
-    console.log(message);
-
     let conversation = await Conversation.findOneAndUpdate(
       { users: { $all: [from, to] } },
       { $push: { messages: message.id } }
     );
-
     if (!conversation) {
       conversation = await Conversation.create({
         messages: [message.id],
         users: [from, to],
       });
-
       await User.findOneAndUpdate(
         { _id: from },
         { $push: { conversations: conversation.id } }
       );
-
       User.findOneAndUpdate(
         { _id: to },
         { $push: { conversations: conversation.id } }
       );
     }
-
     const response = await openAi(text);
-
     const reply = response.data.choices[0].message.content;
-
     const messageReply = await Message.create({
       message: reply,
       sender: process.env.AI_ASSISTANT_ID,
     });
-
     if (toFront) {
-      socket
-        .to(onlineUsers.get(to))
-        .emit("getMessage", { message: messageReply, sender: "AI Assistant" });
-      socket
-        .to(onlineUsers.get(from))
-        .emit("getMessage", { message: messageReply, sender: "AI Assistant" });
+      io.to(onlineUsers.get(to)).emit("getMessage", {
+        messageReply,
+        sender: "AI Assistant",
+      });
+      io.to(onlineUsers.get(from)).emit("getMessage", {
+        messageReply,
+        sender: "AI Assistant",
+      });
     } else {
-      socket
-        .to(sendUserSocket)
-        .emit("getMessage", { message: messageReply, sender: to });
+      io.to(sendUserSocket).emit("getMessage", { messageReply, sender: to });
     }
-
     await Conversation.findOneAndUpdate(
       { users: { $all: [from, to] } },
       { $push: { messages: messageReply.id } }
