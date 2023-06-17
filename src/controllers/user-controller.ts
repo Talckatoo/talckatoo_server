@@ -10,7 +10,7 @@ exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId }: any = req.user;
     const users = await User.find({}).select(
-      "_id userName conversations profileImage"
+      "_id userName conversations profileImage language"
     );
     const currentUser = await User.findOne({ _id: userId });
 
@@ -60,7 +60,7 @@ exports.getUserConversations = catchAsync(
     const { userId } = req.params;
 
     const populateOptions = [
-      { path: "users", select: "userName _id profileImage" },
+      { path: "users", select: "userName _id profileImage language" },
     ];
 
     const conversations = await Conversation.find({ users: userId }).populate(
@@ -82,7 +82,7 @@ exports.getUserConversation = catchAsync(
     const { conversationId } = req.params;
 
     const populateOptions = [
-      { path: "users", select: "userName profileImage" },
+      { path: "users", select: "userName profileImage language" },
       { path: "messages", select: "message sender createdAt voiceNote" },
     ];
 

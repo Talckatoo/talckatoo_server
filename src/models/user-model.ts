@@ -17,7 +17,8 @@ interface Iuser {
   password: String;
   googleId: String;
   conversations: Array<String>;
-  profileImage: { public_id: String; url: String };
+  profileImage?: { public_id: String; url: String };
+  language: String;
 }
 
 //user schema
@@ -50,6 +51,9 @@ const UserSchema = new Schema<Iuser>({
   profileImage: {
     public_id: String,
     url: String,
+  },
+  language: {
+    type: String,
   },
 });
 
