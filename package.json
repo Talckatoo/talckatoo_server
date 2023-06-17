@@ -25,6 +25,7 @@
     "mongoose": "^7.0.1",
     "morgan": "^1.10.0",
     "multiparty": "^4.2.3",
+    "openai": "^3.2.1",
     "passport": "^0.6.0",
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",

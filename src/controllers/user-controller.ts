@@ -9,35 +9,69 @@ const cloudinary = require("../../utils/cloudinary");
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId }: any = req.user;
-    const users = await User.find({}).select(
-      "_id userName conversations profileImage language"
-    );
     const currentUser = await User.findOne({ _id: userId });
 
-    if (users.length < 1) {
+    const populateOptions = {
+      path: "conversations",
+      select: "_id createdAt updatedAt",
+    };
+
+    const contactedUsers = await User.find({
+      _id: { $ne: currentUser._id },
+      conversations: { $in: currentUser.conversations },
+    })
+      .select("_id userName conversations profileImage")
+      .populate(populateOptions);
+
+    contactedUsers.forEach((user: any) => {
+      user.conversations = user.conversations.filter((conversation: any) => {
+        return currentUser.conversations.includes(conversation._id);
+      });
+    });
+
+    const modifiedUsers = contactedUsers.map((user: any) => {
+      return {
+        _id: user._id,
+        userName: user.userName,
+        profileImage: user.profileImage,
+        conversation: user.conversations[0],
+        conversations: undefined,
+      };
+    });
+
+    modifiedUsers.sort((a: any, b: any) => {
+      if (
+        a.conversation["updatedAt"].getTime() <
+        b.conversation["updatedAt"].getTime()
+      ) {
+        return 1;
+      }
+
+      if (
+        a.conversation["updatedAt"].getTime() >
+        b.conversation["updatedAt"].getTime()
+      ) {
+        return -1;
+      }
+
+      return 0;
+    });
+
+    const uncontactedUsers = await User.find({
+      _id: { $ne: currentUser._id },
+      conversations: { $nin: currentUser.conversations },
+    }).select("_id userName profileImage");
+
+    if (contactedUsers.length < 1 && uncontactedUsers.length < 1) {
       res
         .status(200)
         .json({ status: "Success", message: "There are currently no users" });
     }
 
-    const contactedUsers = users.filter((user: any) => {
-      return user.conversations.some((conversationId: any) => {
-        if (currentUser.conversations.includes(conversationId)) {
-          console.log(conversationId);
-        }
-        return currentUser.conversations.includes(conversationId);
-      });
+    res.status(200).json({
+      status: "Success",
+      users: { contactedUsers: modifiedUsers, uncontactedUsers },
     });
-
-    const uncontactedUsers = users.filter((user: any) => {
-      return !user.conversations.some((conversationId: any) => {
-        return currentUser.conversations.includes(conversationId);
-      });
-    });
-
-    res
-      .status(200)
-      .json({ status: "Success", users: { contactedUsers, uncontactedUsers } });
   }
 );
 
