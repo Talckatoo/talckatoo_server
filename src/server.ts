@@ -5,7 +5,6 @@ const socket = require("socket.io");
 import { Socket } from "socket.io";
 const { Types } = require("mongoose");
 
-
 dotenv.config({ path: "./config.env" });
 
 const DB = process?.env?.DATABASE?.replace(
@@ -37,14 +36,14 @@ const io = socket(server, {
 const onlineUsers = new Map<string, string>();
 
 io.on("connection", (socket: Socket) => {
-  console.log('we should have a connection');
+  console.log("we should have a connection");
 
   socket.on("addUser", (userId) => {
     onlineUsers.set(userId, socket.id);
-    console.log('the online users are', Array.from(onlineUsers));
+    console.log("the online users are", Array.from(onlineUsers));
     io.emit("getUsers", Array.from(onlineUsers));
   });
-  
+
   socket.on("sendMessage", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
@@ -61,5 +60,5 @@ io.on("connection", (socket: Socket) => {
       }
     }
     io.emit("getUsers", Array.from(onlineUsers));
-  })
+  });
 });

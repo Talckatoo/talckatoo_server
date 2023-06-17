@@ -11,6 +11,7 @@ const {
   deleteMessage,
   createVoiceNote,
   deleteVoiceNote,
+  createVoiceTranslate,
 } = require("../controllers/message-controller");
 
 router.route("/conversations").get(getConversations);
@@ -23,6 +24,7 @@ router
   .patch(editMessage)
   .delete(deleteMessage);
 router.route("/messages/voice-note/:messageId").delete(deleteVoiceNote);
+// router.route("/messages/voice-translate").post(createVoiceTranslate);
 
 export {};
 module.exports = router;
