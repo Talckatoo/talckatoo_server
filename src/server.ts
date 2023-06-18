@@ -56,21 +56,15 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("isTyping", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
+    const sendUserSocket = onlineUsers.get(data);
     if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("isTyping", data);
+      io.to(sendUserSocket).emit("isTyping");
     }
   });
-  socket.on("isTyping", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
+  socket.on("stopTyping", (data) => {
+    const sendUserSocket = onlineUsers.get(data);
     if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("isTyping", data);
-    }
-  });
-  socket.on("isTyping", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    if (sendUserSocket) {
-      socket.to(sendUserSocket).emit("isTyping", data);
+      io.to(sendUserSocket).emit("stopTyping");
     }
   });
 
