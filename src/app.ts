@@ -64,6 +64,7 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
     message: `can't find ${req.url} on this server`,
   });
 });
+console.log("hello world");
 app.use(globalErrorHandler);
 export {};
 module.exports = app;

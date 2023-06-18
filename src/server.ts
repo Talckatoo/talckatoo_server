@@ -61,6 +61,18 @@ io.on("connection", (socket: Socket) => {
       socket.to(sendUserSocket).emit("isTyping", data);
     }
   });
+  socket.on("isTyping", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      socket.to(sendUserSocket).emit("isTyping", data);
+    }
+  });
+  socket.on("isTyping", (data) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      socket.to(sendUserSocket).emit("isTyping", data);
+    }
+  });
 
   socket.on("sendMessageChatGPT", async (data: any) => {
     const { message: text, from, to: toFront } = data;
