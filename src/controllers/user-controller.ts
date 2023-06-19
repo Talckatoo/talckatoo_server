@@ -20,7 +20,7 @@ exports.getUsers = catchAsync(
       _id: { $ne: currentUser._id },
       conversations: { $in: currentUser.conversations },
     })
-      .select("_id userName conversations profileImage")
+      .select("_id userName conversations profileImage language")
       .populate(populateOptions);
 
     contactedUsers.forEach((user: any) => {
@@ -36,6 +36,7 @@ exports.getUsers = catchAsync(
         profileImage: user.profileImage,
         conversation: user.conversations[0],
         conversations: undefined,
+        language: user.language,
       };
     });
 
@@ -60,7 +61,7 @@ exports.getUsers = catchAsync(
     const uncontactedUsers = await User.find({
       _id: { $ne: currentUser._id },
       conversations: { $nin: currentUser.conversations },
-    }).select("_id userName profileImage");
+    }).select("_id userName profileImage language");
 
     if (contactedUsers.length < 1 && uncontactedUsers.length < 1) {
       res
