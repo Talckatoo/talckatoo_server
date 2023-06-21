@@ -32,7 +32,7 @@ const server = app.listen(PORT, listener);
 
 const io = socket(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "http://localhost:5174"],
     credentials: true,
   },
 });
@@ -52,6 +52,19 @@ io.on("connection", (socket: Socket) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       socket.to(sendUserSocket).emit("getMessage", data);
+    }
+  });
+
+  socket.on("isTyping", (data) => {
+    const sendUserSocket = onlineUsers.get(data);
+    if (sendUserSocket) {
+      io.to(sendUserSocket).emit("isTyping");
+    }
+  });
+  socket.on("stopTyping", (data) => {
+    const sendUserSocket = onlineUsers.get(data);
+    if (sendUserSocket) {
+      io.to(sendUserSocket).emit("stopTyping");
     }
   });
 

@@ -11,6 +11,7 @@ const {
   deleteMessage,
   createVoiceNote,
   deleteVoiceNote,
+  createVoiceTranslate,
 } = require("../controllers/message-controller");
 
 router.route("/conversations").get(getConversations);

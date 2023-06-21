@@ -7,7 +7,7 @@ const Conversation = require("../models/conversation-model");
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { userName, email, password } = req.body;
+    const { userName, email, password, language } = req.body;
 
     if (!userName || !email || !password) {
       throw new AppError(
@@ -15,7 +15,7 @@ exports.signUp = catchAsync(
         400
       );
     }
-    const user = await User.create({ userName, email, password });
+    const user = await User.create({ userName, email, password, language });
     const userId = user._id;
 
     const aiId = process.env.AI_ASSISTANT_ID;

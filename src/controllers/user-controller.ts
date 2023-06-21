@@ -20,7 +20,7 @@ exports.getUsers = catchAsync(
       _id: { $ne: currentUser._id },
       conversations: { $in: currentUser.conversations },
     })
-      .select("_id userName conversations profileImage")
+      .select("_id userName conversations profileImage language")
       .populate(populateOptions);
 
     contactedUsers.forEach((user: any) => {
@@ -36,6 +36,7 @@ exports.getUsers = catchAsync(
         profileImage: user.profileImage,
         conversation: user.conversations[0],
         conversations: undefined,
+        language: user.language,
       };
     });
 
@@ -60,7 +61,7 @@ exports.getUsers = catchAsync(
     const uncontactedUsers = await User.find({
       _id: { $ne: currentUser._id },
       conversations: { $nin: currentUser.conversations },
-    }).select("_id userName profileImage");
+    }).select("_id userName profileImage language");
 
     if (contactedUsers.length < 1 && uncontactedUsers.length < 1) {
       res
@@ -94,7 +95,7 @@ exports.getUserConversations = catchAsync(
     const { userId } = req.params;
 
     const populateOptions = [
-      { path: "users", select: "userName _id profileImage" },
+      { path: "users", select: "userName _id profileImage language" },
     ];
 
     const conversations = await Conversation.find({ users: userId }).populate(
@@ -116,8 +117,8 @@ exports.getUserConversation = catchAsync(
     const { conversationId } = req.params;
 
     const populateOptions = [
-      { path: "users", select: "userName" },
-      { path: "messages", select: "message sender createdAt" },
+      { path: "users", select: "userName profileImage language" },
+      { path: "messages", select: "message sender createdAt voiceNote" },
     ];
 
     const conversation = await Conversation.findOne({
