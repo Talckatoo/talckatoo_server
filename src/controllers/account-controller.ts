@@ -36,7 +36,7 @@ exports.signUp = catchAsync(
 
     const token = user.createJWT();
 
-    res.status(201).json({ message: "User successfully created", token });
+    res.status(201).json({ message: "User successfully created", token, user });
   }
 );
 
@@ -69,6 +69,7 @@ exports.logIn = catchAsync(
       msg: "User successfully authenticated",
       success: "login",
       token,
+      user,
     });
   }
 );
