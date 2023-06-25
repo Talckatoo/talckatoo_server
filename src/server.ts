@@ -7,7 +7,7 @@ const User = require("../src/models/user-model");
 const Message = require("../src/models/message-model");
 const Conversation = require("../src/models/conversation-model");
 const openAi = require("../utils/openai_config");
-import { Socket } from "socket.io";
+const { Server } = require("socket.io");
 
 dotenv.config({ path: "./config.env" });
 
@@ -37,7 +37,13 @@ const io = socket(server, {
   },
 });
 
-const onlineUsers: any = new Map<string, string>();
+//const onlineUsers: any = new Map<string, string>();
+//const onlineUsers: Map<string, string> = new Map();
+//const onlineUsers: Map<string, string> = new Map;
+//const onlineUsers = new Map<string, string>();
+//const onlineUsers: Map<string, string> = new Map<string, string>();
+const onlineUsers = new Map();
+
 
 io.on("connection", (socket: Socket) => {
   console.log("we should have a connection");
