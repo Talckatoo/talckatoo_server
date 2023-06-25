@@ -64,8 +64,8 @@ exports.getMessage = catchAsync(
 exports.createMessage = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { message: text, to, from, targetLanguage } = req.body;
+
     const target = targetLanguage ? targetLanguage : "en";
-    const encodedParams = new URLSearchParams();
 
     if (!text || !to || !from) {
       throw new AppError("Invalid Input. Please try again", 400);
@@ -75,29 +75,28 @@ exports.createMessage = catchAsync(
       throw new AppError("You can't send a message to yourself", 403);
     }
 
-    encodedParams.set("target_language", target);
-    encodedParams.set("text", text);
-
     const options = {
       method: "POST",
-      url: "https://text-translator2.p.rapidapi.com/translate",
+      url: process.env.TRANSLATE_URL,
       headers: {
-        "content-type": "application/x-www-form-urlencoded",
-        "X-RapidAPI-Key": process.env.X_RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "text-translator2.p.rapidapi.com",
+        "content-type": "application/json",
+        "X-RapidAPI-Key": process.env.API_KEY,
+        "X-RapidAPI-Host": process.env.API_HOST,
       },
-      data: encodedParams,
+      data: {
+        text,
+        target,
+      },
     };
-
     const response = await axios.request(options);
+
     let translate: string;
 
-    if (response.data.data.detectedSourceLanguage === "en" && target === "en") {
-      return (translate = "");
+    if (response.data[0].result.ori === "en" && target === "en") {
+      translate = "";
     } else {
-      translate = `\n${response.data.data.translatedText}`;
+      translate = `\n${response.data[0].result.text}`;
     }
-
     const message = await Message.create({
       message: text + translate,
       sender: from,
@@ -125,7 +124,7 @@ exports.createMessage = catchAsync(
       );
     }
 
-    res.status(201).json({ status: "Success", message, conversation});
+    res.status(201).json({ status: "Success", message, conversation });
   }
 );
 

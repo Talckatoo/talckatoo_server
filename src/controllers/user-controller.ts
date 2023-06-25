@@ -161,18 +161,17 @@ exports.updateProfile = catchAsync(
         }
       }
 
-      const { userName, public_id } = fields;
+      const { userName, public_id, language } = fields;
 
-      if (public_id) cloudinary.uploader.destroy(public_id);
+      if (public_id) cloudinary.uploader.destroy(public_id[0]);
 
       let updateObj: any = {
         profileImage: { public_id: result?.public_id, url: result?.url },
       };
-
       if (!updateObj.profileImage.public_id) updateObj = {};
 
       if (userName) updateObj.userName = userName[0];
-
+      if (language[0]) updateObj.language = language[0];
       const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
         new: true,
       });
