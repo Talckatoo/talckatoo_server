@@ -41,7 +41,8 @@ const io = socket(server, {
 //const onlineUsers: Map<string, string> = new Map();
 //const onlineUsers: Map<string, string> = new Map;
 //const onlineUsers = new Map<string, string>();
-const onlineUsers: Map<string, string> = new Map<string, string>();
+//const onlineUsers: Map<string, string> = new Map<string, string>();
+const onlineUsers = new Map();
 
 
 io.on("connection", (socket: Socket) => {
