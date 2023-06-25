@@ -39,7 +39,9 @@ const io = socket(server, {
 
 //const onlineUsers: any = new Map<string, string>();
 //const onlineUsers: Map<string, string> = new Map();
-const onlineUsers: Map<string, string> = new Map;
+//const onlineUsers: Map<string, string> = new Map;
+const onlineUsers = new Map<string, string>();
+
 
 io.on("connection", (socket: Socket) => {
   console.log("we should have a connection");
