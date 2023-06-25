@@ -1,3 +1,5 @@
+import { Socket } from "socket.io";
+
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const app = require("./app.ts");
@@ -43,7 +45,6 @@ const io = socket(server, {
 //const onlineUsers = new Map<string, string>();
 //const onlineUsers: Map<string, string> = new Map<string, string>();
 const onlineUsers = new Map();
-
 
 io.on("connection", (socket: Socket) => {
   console.log("we should have a connection");
