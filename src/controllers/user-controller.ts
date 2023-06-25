@@ -1,10 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 const multiparty = require("multiparty");
 const User = require("../models/user-model");
+const Message = require("../models/message-model");
 const Conversation = require("../models/conversation-model");
 const catchAsync = require("../../utils/catch-async");
 const AppError = require("../../utils/custom-error");
 const cloudinary = require("../../utils/cloudinary");
+const axios = require("axios");
 
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -171,7 +173,25 @@ exports.updateProfile = catchAsync(
       if (!updateObj.profileImage.public_id) updateObj = {};
 
       if (userName) updateObj.userName = userName[0];
-      if (language[0]) updateObj.language = language[0];
+      if (language[0]) {
+        const options = {
+          method: "POST",
+          url: process.env.TRANSLATE_URL,
+          headers: {
+            "content-type": "application/json",
+            "X-RapidAPI-Key": process.env.API_KEY,
+            "X-RapidAPI-Host": process.env.API_HOST,
+          },
+          data: {
+            text: "welcome",
+            target: language,
+          },
+        };
+        const response = await axios.request(options);
+        const welcome = response.data[0].result.text;
+        updateObj.language = language[0];
+        updateObj.welcome = welcome;
+      }
       const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
         new: true,
       });
