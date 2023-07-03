@@ -6,8 +6,7 @@ const Message = require("../models/message-model");
 const catchAsync = require("../../utils/catch-async");
 const cloudinary = require("../../utils/cloudinary");
 const multiparty = require("multiparty");
-const { GoogleAuth } = require("google-auth-library");
-const speech = require("@google-cloud/speech");
+const fs = require("fs");
 const axios = require("axios");
 
 exports.getConversations = catchAsync(
@@ -63,7 +62,14 @@ exports.getMessage = catchAsync(
 
 exports.createMessage = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { message: text, to, from, targetLanguage } = req.body;
+    const {
+      message: text,
+      to,
+      from,
+      targetLanguage,
+      voiceToVoice,
+      voiceTargetLanguage,
+    } = req.body;
     const target = targetLanguage ? targetLanguage : "en";
     const encodedParams = new URLSearchParams();
 
@@ -80,11 +86,11 @@ exports.createMessage = catchAsync(
 
     const options = {
       method: "POST",
-      url: "https://text-translator2.p.rapidapi.com/translate",
+      url: process.env.TEXT_TRANSLATE_URL,
       headers: {
         "content-type": "application/x-www-form-urlencoded",
-        "X-RapidAPI-Key": process.env.X_RAPIDAPI_KEY,
-        "X-RapidAPI-Host": "text-translator2.p.rapidapi.com",
+        "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
+        "X-RapidAPI-Host": process.env.TEXT_TRANSLATE_HOST,
       },
       data: encodedParams,
     };
@@ -98,34 +104,114 @@ exports.createMessage = catchAsync(
       translate = `\n${response.data.data.translatedText}`;
     }
 
-    const message = await Message.create({
-      message: text + translate,
-      sender: from,
-    });
-
-    let conversation = await Conversation.findOneAndUpdate(
-      { users: { $all: [from, to] } },
-      { $push: { messages: message.id } }
-    );
-
-    if (!conversation) {
-      conversation = await Conversation.create({
-        messages: [message.id],
-        users: [from, to],
+    if (!voiceToVoice) {
+      const message = await Message.create({
+        message: text + translate,
+        sender: from,
       });
 
-      const currentUser = await User.findOneAndUpdate(
-        { _id: from },
-        { $push: { conversations: conversation.id } }
+      let conversation = await Conversation.findOneAndUpdate(
+        { users: { $all: [from, to] } },
+        { $push: { messages: message.id } }
       );
 
-      const messagedUser = await User.findOneAndUpdate(
-        { _id: to },
-        { $push: { conversations: conversation.id } }
+      if (!conversation) {
+        conversation = await Conversation.create({
+          messages: [message.id],
+          users: [from, to],
+        });
+
+        await User.findOneAndUpdate(
+          { _id: from },
+          { $push: { conversations: conversation.id } }
+        );
+
+        await User.findOneAndUpdate(
+          { _id: to },
+          { $push: { conversations: conversation.id } }
+        );
+      }
+      res.status(201).json({ status: "Success", message, conversation });
+    } else {
+      const encodedParams = new URLSearchParams();
+      encodedParams.set("src", translate);
+      encodedParams.set("hl", voiceTargetLanguage);
+      encodedParams.set("r", "0");
+      encodedParams.set("c", "mp3");
+      encodedParams.set("f", "8khz_8bit_mono");
+      encodedParams.set("b64", "true");
+      const options = {
+        method: "POST",
+        url: process.env.URL,
+        params: {
+          key: process.env.VOICE_PARAMS_KEY,
+        },
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          "X-RapidAPI-Key": process.env.VOICE_API_KEY,
+          "X-RapidAPI-Host": process.env.VOICE_API_HOST,
+        },
+        data: encodedParams,
+      };
+
+      const response = await axios.request(options);
+
+      const audioData = response.data;
+
+      const decodedData = Buffer.from(audioData, "base64");
+
+      // Create a temporary file to store the audio data
+      const tempFilePath = "./temp_audio.mp3";
+      fs.writeFileSync(tempFilePath, decodedData);
+
+      const uploadOptions = {
+        resource_type: "video",
+        format: "mp3",
+        folder: "voice-notes",
+      };
+
+      cloudinary.uploader.upload_large(
+        tempFilePath,
+        uploadOptions,
+        async (error: any, result: any) => {
+          // Delete the temporary file
+          fs.unlinkSync(tempFilePath);
+
+          if (error) {
+            console.log(error);
+          } else {
+            const { public_id, url } = result;
+            const message = await Message.create({
+              voiceNote: { public_id, url },
+              sender: from,
+            });
+
+            let conversation = await Conversation.findOneAndUpdate(
+              { users: { $all: [from, to] } },
+              { $push: { messages: message.id } }
+            );
+
+            if (!conversation) {
+              conversation = await Conversation.create({
+                messages: [message.id],
+                users: [from, to],
+              });
+
+              await User.findOneAndUpdate(
+                { _id: from },
+                { $push: { conversations: conversation.id } }
+              );
+
+              await User.findOneAndUpdate(
+                { _id: to },
+                { $push: { conversations: conversation.id } }
+              );
+            }
+            res.status(201).json({ status: "Success", message, conversation });
+          }
+        }
       );
     }
-
-    res.status(201).json({ status: "Success", message, conversation});
   }
 );
 

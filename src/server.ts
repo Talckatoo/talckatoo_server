@@ -1,3 +1,5 @@
+import { Socket } from "socket.io";
+
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const app = require("./app.ts");
@@ -7,6 +9,8 @@ const User = require("../src/models/user-model");
 const Message = require("../src/models/message-model");
 const Conversation = require("../src/models/conversation-model");
 const openAi = require("../utils/openai_config");
+const crypto = require("crypto");
+
 const { Server } = require("socket.io");
 
 dotenv.config({ path: "./config.env" });
@@ -44,33 +48,32 @@ const io = socket(server, {
 //const onlineUsers: Map<string, string> = new Map<string, string>();
 const onlineUsers = new Map();
 
-
 io.on("connection", (socket: Socket) => {
   console.log("we should have a connection");
 
-  socket.on("addUser", (userId) => {
+  socket.on("addUser", (userId: any) => {
     onlineUsers.set(userId, socket.id);
     console.log("the online users are", Array.from(onlineUsers));
     io.emit("getUsers", Array.from(onlineUsers));
   });
 
-  socket.on("sendMessage", (data) => {
+  socket.on("sendMessage", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       io.to(sendUserSocket).emit("getMessage", data);
     }
   });
 
-  socket.on("isTyping", (data) => {
-    const sendUserSocket = onlineUsers.get(data);
+  socket.on("isTyping", (data: any) => {
+    const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
-      io.to(sendUserSocket).emit("isTyping");
+      io.to(sendUserSocket).emit("isTyping", data);
     }
   });
-  socket.on("stopTyping", (data) => {
-    const sendUserSocket = onlineUsers.get(data);
+  socket.on("stopTyping", (data: any) => {
+    const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
-      io.to(sendUserSocket).emit("stopTyping");
+      io.to(sendUserSocket).emit("stopTyping", data);
     }
   });
 
