@@ -19,6 +19,7 @@ interface Iuser {
   conversations: Array<String>;
   profileImage?: { public_id: String; url: String };
   language: String;
+  welcome: String;
 }
 
 //user schema
@@ -53,6 +54,9 @@ const UserSchema = new Schema<Iuser>({
     url: String,
   },
   language: {
+    type: String,
+  },
+  welcome: {
     type: String,
   },
 });

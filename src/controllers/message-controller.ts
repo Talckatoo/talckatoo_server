@@ -71,7 +71,6 @@ exports.createMessage = catchAsync(
       voiceTargetLanguage,
     } = req.body;
     const target = targetLanguage ? targetLanguage : "en";
-    const encodedParams = new URLSearchParams();
 
     if (!text || !to || !from) {
       throw new AppError("Invalid Input. Please try again", 400);
@@ -81,9 +80,6 @@ exports.createMessage = catchAsync(
       throw new AppError("You can't send a message to yourself", 403);
     }
 
-    encodedParams.set("target_language", target);
-    encodedParams.set("text", text);
-
     const options = {
       method: "POST",
       url: process.env.TEXT_TRANSLATE_URL,
@@ -92,16 +88,19 @@ exports.createMessage = catchAsync(
         "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
         "X-RapidAPI-Host": process.env.TEXT_TRANSLATE_HOST,
       },
-      data: encodedParams,
+      data: {
+        text,
+        target,
+      },
     };
-
     const response = await axios.request(options);
+
     let translate: string;
 
-    if (response.data.data.detectedSourceLanguage === "en" && target === "en") {
-      return (translate = "");
+    if (response.data[0].result.ori === "en" && target === "en") {
+      translate = "";
     } else {
-      translate = `\n${response.data.data.translatedText}`;
+      translate = `\n${response.data[0].result.text}`;
     }
 
     if (!voiceToVoice) {
