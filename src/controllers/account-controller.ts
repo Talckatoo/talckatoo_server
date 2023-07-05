@@ -4,6 +4,7 @@ const catchAsync = require("../../utils/catch-async");
 const passport = require("../../utils/passport-config");
 const AppError = require("../../utils/custom-error");
 const Conversation = require("../models/conversation-model");
+const axios = require("axios");
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -15,7 +16,30 @@ exports.signUp = catchAsync(
         400
       );
     }
-    const user = await User.create({ userName, email, password, language });
+
+    const options = {
+      method: "POST",
+      url: process.env.TRANSLATE_URL,
+      headers: {
+        "content-type": "application/json",
+        "X-RapidAPI-Key": process.env.API_KEY,
+        "X-RapidAPI-Host": process.env.API_HOST,
+      },
+      data: {
+        text: "welcome",
+        target: language,
+      },
+    };
+    const response = await axios.request(options);
+    const welcome = response.data[0].result.text;
+
+    const user = await User.create({
+      userName,
+      email,
+      password,
+      language,
+      welcome,
+    });
     const userId = user._id;
 
     const aiId = process.env.AI_ASSISTANT_ID;
