@@ -6,12 +6,13 @@
     "lib": ["es2021"],
     "module": "commonjs",
     "target": "es2021",
-    "outDir": "./src/dist",
+    "outDir": "./dist",
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node"
-  }
+  },
+  "exclude": ["node_modules", "./dist"]
 }
