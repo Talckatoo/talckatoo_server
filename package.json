@@ -4,7 +4,7 @@
   "description": "Back-End Repo for Team 2 of Cockatoo/Chimp Practicum",
   "main": "app.ts",
   "scripts": {
-    "start": "node ./dist/server.js",
+    "start": "node ./src/dist/server.js",
     "build": "tsc",
     "dev": "nodemon ./src/server.ts"
   },
