@@ -9,6 +9,8 @@ const User = require("../src/models/user-model");
 const Message = require("../src/models/message-model");
 const Conversation = require("../src/models/conversation-model");
 const openAi = require("../utils/openai_config");
+const crypto = require("crypto");
+
 const { Server } = require("socket.io");
 
 dotenv.config({ path: "./config.env" });
