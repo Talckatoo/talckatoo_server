@@ -2,7 +2,7 @@ import { Socket } from "socket.io";
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const app = require("./app.ts");
+const app = require("./app");
 const socket = require("socket.io");
 const AppError = require("../utils/custom-error");
 const User = require("../src/models/user-model");
