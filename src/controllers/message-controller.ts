@@ -79,14 +79,14 @@ exports.createMessage = catchAsync(
     if (to === from) {
       throw new AppError("You can't send a message to yourself", 403);
     }
-
+    console.log(process.env.TEXT_TRANSLATE_URL);
     const options = {
       method: "POST",
-      url: process.env.TEXT_TRANSLATE_URL,
+      url: process.env.TRANSLATE_URL,
       headers: {
-        "content-type": "application/x-www-form-urlencoded",
+        "content-type": "application/json",
         "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
-        "X-RapidAPI-Host": process.env.TEXT_TRANSLATE_HOST,
+        "X-RapidAPI-Host": process.env.API_HOST,
       },
       data: {
         text,

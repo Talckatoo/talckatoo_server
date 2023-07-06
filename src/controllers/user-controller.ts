@@ -179,7 +179,7 @@ exports.updateProfile = catchAsync(
           url: process.env.TRANSLATE_URL,
           headers: {
             "content-type": "application/json",
-            "X-RapidAPI-Key": process.env.API_KEY,
+            "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
             "X-RapidAPI-Host": process.env.API_HOST,
           },
           data: {
