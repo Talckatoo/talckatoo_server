@@ -79,7 +79,7 @@ exports.createMessage = catchAsync(
     if (to === from) {
       throw new AppError("You can't send a message to yourself", 403);
     }
-    console.log(process.env.TEXT_TRANSLATE_URL);
+
     const options = {
       method: "POST",
       url: process.env.TRANSLATE_URL,
