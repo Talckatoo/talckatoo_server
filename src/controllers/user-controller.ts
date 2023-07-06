@@ -173,7 +173,7 @@ exports.updateProfile = catchAsync(
       if (!updateObj.profileImage.public_id) updateObj = {};
 
       if (userName) updateObj.userName = userName[0];
-      if (language[0]) {
+      if (language) {
         const options = {
           method: "POST",
           url: process.env.TRANSLATE_URL,
@@ -184,7 +184,7 @@ exports.updateProfile = catchAsync(
           },
           data: {
             text: "welcome",
-            target: language,
+            target: language[0],
           },
         };
         const response = await axios.request(options);

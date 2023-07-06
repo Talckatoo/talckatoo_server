@@ -2,13 +2,13 @@ import { Socket } from "socket.io";
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
-const app = require("./app.ts");
+const app = require("./app");
 const socket = require("socket.io");
-const AppError = require("../utils/custom-error");
-const User = require("../src/models/user-model");
-const Message = require("../src/models/message-model");
-const Conversation = require("../src/models/conversation-model");
-const openAi = require("../utils/openai_config");
+const AppError = require("./utils/custom-error");
+const User = require("./src/models/user-model");
+const Message = require("./src/models/message-model");
+const Conversation = require("./src/models/conversation-model");
+const openAi = require("./utils/openai_config");
 const crypto = require("crypto");
 
 const { Server } = require("socket.io");
