@@ -36,7 +36,12 @@ const server = app.listen(PORT, listener);
 
 const io = socket(server, {
   cors: {
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://team2-two.vercel.app/",
+      "https://team2-two.vercel.app",
+    ],
     credentials: true,
   },
 });
