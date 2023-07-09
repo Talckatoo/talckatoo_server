@@ -41,6 +41,8 @@ const io = socket(server, {
       "http://localhost:5174",
       "https://team2-two.vercel.app/",
       "https://team2-two.vercel.app",
+      "https://cc-prac-team2-front-vqs8.vercel.app",
+      "https://cc-prac-team2-front-vqs8.vercel.app/",
     ],
     credentials: true,
   },
