@@ -79,19 +79,21 @@ io.on("connection", (socket: Socket) => {
     const sendUserSocket = toFront
       ? onlineUsers.get(from)
       : onlineUsers.get(to);
-    console.log("hello");
+
     if (!text || !to || !from) {
       throw new AppError("Invalid Input. Please try again", 400);
     }
     if (to === from) {
       throw new AppError("You can’t send a message to yourself", 403);
     }
+    console.log("hello1");
     const selectUserSocket = onlineUsers.get(to);
     if (toFront) io.to(selectUserSocket).emit("getMessage", data);
     const message = await Message.create({
       message: text,
       sender: from,
     });
+    console.log("hello2");
     let conversation = await Conversation.findOneAndUpdate(
       { users: { $all: [from, to] } },
       { $push: { messages: message.id } }
@@ -110,12 +112,22 @@ io.on("connection", (socket: Socket) => {
         { $push: { conversations: conversation.id } }
       );
     }
-    const response = await openAi(text);
+    console.log("hello3");
+    let response;
+    try {
+      response = await openAi(text);
+    } catch (err) {
+      console.log(err);
+    }
+    console.log(response);
+    console.log("hello33");
     const reply = response.data.choices[0].message.content;
+    console.log("hello4");
     const messageReply = await Message.create({
       message: reply,
       sender: process.env.AI_ASSISTANT_ID,
     });
+    console.log("hello5");
     if (toFront) {
       io.to(onlineUsers.get(to)).emit("getMessage", {
         messageReply,
