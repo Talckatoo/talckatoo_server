@@ -20,13 +20,10 @@ const DB = process?.env?.DATABASE?.replace(
 mongoose.set("strictQuery", true);
 
 const listener = async () => {
-  await mongoose
-    .connect(DB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-    .then(() => console.log("database connection successful"));
-  console.log(`Listening on Port ${PORT}!`);
+  await mongoose.connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 };
 const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
@@ -45,11 +42,8 @@ const io = socket(server, {
 const onlineUsers = new Map();
 
 io.on("connection", (socket: Socket) => {
-  console.log("we should have a connection");
-
   socket.on("addUser", (userId: any) => {
     onlineUsers.set(userId, socket.id);
-    console.log("the online users are", Array.from(onlineUsers));
     io.emit("getUsers", Array.from(onlineUsers));
   });
 
@@ -86,14 +80,12 @@ io.on("connection", (socket: Socket) => {
     if (to === from) {
       throw new AppError("You can’t send a message to yourself", 403);
     }
-    console.log("hello1");
     const selectUserSocket = onlineUsers.get(to);
     if (toFront) io.to(selectUserSocket).emit("getMessage", data);
     const message = await Message.create({
       message: text,
       sender: from,
     });
-    console.log("hello2");
     let conversation = await Conversation.findOneAndUpdate(
       { users: { $all: [from, to] } },
       { $push: { messages: message.id } }
@@ -112,22 +104,15 @@ io.on("connection", (socket: Socket) => {
         { $push: { conversations: conversation.id } }
       );
     }
-    console.log("hello3");
     let response;
     try {
       response = await openAi(text);
-    } catch (err) {
-      console.log(err);
-    }
-    console.log(response);
-    console.log("hello33");
-    const reply = response.data.choices[0].message.content;
-    console.log("hello4");
+    } catch (err) {}
+    const reply = response?.data?.choices[0]?.message?.content;
     const messageReply = await Message.create({
       message: reply,
       sender: process.env.AI_ASSISTANT_ID,
     });
-    console.log("hello5");
     if (toFront) {
       io.to(onlineUsers.get(to)).emit("getMessage", {
         messageReply,
