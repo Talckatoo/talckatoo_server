@@ -16,7 +16,7 @@ const userRouter = require("./src/routes/user-router");
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 
 // middleware
-app.use(cors());
+app.use(cors({ origin: true }));
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));

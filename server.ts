@@ -79,7 +79,7 @@ io.on("connection", (socket: Socket) => {
     const sendUserSocket = toFront
       ? onlineUsers.get(from)
       : onlineUsers.get(to);
-
+    console.log("hello");
     if (!text || !to || !from) {
       throw new AppError("Invalid Input. Please try again", 400);
     }
