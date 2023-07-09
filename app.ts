@@ -17,6 +17,17 @@ const { globalErrorHandler } = require("./src/controllers/error-controller");
 
 // middleware
 app.use(cors({ origin: true }));
+app.all("*", (req: Request, res: Response, next: NextFunction) => {
+  res.status(400).json({
+    status: "not found",
+    message: `can't find ${req.url} on this server`,
+  });
+});
+app.use((req: Request, res: Response, next: NextFunction) => {
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  next();
+});
+
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: false }));
