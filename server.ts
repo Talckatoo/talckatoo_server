@@ -9,9 +9,6 @@ const User = require("./src/models/user-model");
 const Message = require("./src/models/message-model");
 const Conversation = require("./src/models/conversation-model");
 const openAi = require("./utils/openai_config");
-const crypto = require("crypto");
-
-const { Server } = require("socket.io");
 
 dotenv.config({ path: "./config.env" });
 
@@ -36,12 +33,7 @@ const server = app.listen(PORT, listener);
 
 const io = socket(server, {
   cors: {
-    origin: [
-      "http://localhost:5173",
-      "http://localhost:5174",
-      "https://team2-two.vercel.app/",
-      "https://team2-two.vercel.app",
-    ],
+    origin: "*",
     credentials: true,
   },
 });
