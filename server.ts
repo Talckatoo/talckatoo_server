@@ -20,13 +20,10 @@ const DB = process?.env?.DATABASE?.replace(
 mongoose.set("strictQuery", true);
 
 const listener = async () => {
-  await mongoose
-    .connect(DB, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    })
-    .then(() => console.log("database connection successful"));
-  console.log(`Listening on Port ${PORT}!`);
+  await mongoose.connect(DB, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
 };
 const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
@@ -45,11 +42,8 @@ const io = socket(server, {
 const onlineUsers = new Map();
 
 io.on("connection", (socket: Socket) => {
-  console.log("we should have a connection");
-
   socket.on("addUser", (userId: any) => {
     onlineUsers.set(userId, socket.id);
-    console.log("the online users are", Array.from(onlineUsers));
     io.emit("getUsers", Array.from(onlineUsers));
   });
 
@@ -110,8 +104,11 @@ io.on("connection", (socket: Socket) => {
         { $push: { conversations: conversation.id } }
       );
     }
-    const response = await openAi(text);
-    const reply = response.data.choices[0].message.content;
+    let response;
+    try {
+      response = await openAi(text);
+    } catch (err) {}
+    const reply = response?.data?.choices[0]?.message?.content;
     const messageReply = await Message.create({
       message: reply,
       sender: process.env.AI_ASSISTANT_ID,
