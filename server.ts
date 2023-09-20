@@ -1,5 +1,5 @@
 import { Socket } from "socket.io";
-
+import swaggerDocs from "./utils/swagger";
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const app = require("./app");
@@ -11,21 +11,24 @@ const Conversation = require("./src/models/conversation-model");
 const openAi = require("./utils/openai_config");
 
 dotenv.config({ path: "./config.env" });
-
+const { PORT = 8000 } = process.env;
 const DB = process?.env?.DATABASE?.replace(
   "<password>",
   `${process.env.DATABASE_PASSWORD}`
 );
 
 mongoose.set("strictQuery", true);
+swaggerDocs(app, 8000);
 
 const listener = async () => {
   await mongoose.connect(DB, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+
+  console.log(`app is running on port ${PORT}`);
 };
-const { PORT = 8000 } = process.env;
+
 const server = app.listen(PORT, listener);
 
 const io = socket(server, {

@@ -51,14 +51,14 @@ app.use(passport.session());
 
 // routes
 
-app.use(
-  "/",
-  catchAsync(async (req: Request, res: Response) => {
-    res.status(200).json({
-      success: "Welcome to Talckatoo API",
-    });
-  })
-);
+// app.use(
+//   "/",
+//   catchAsync(async (req: Request, res: Response) => {
+//     res.status(200).json({
+//       success: "Welcome to Talckatoo API",
+//     });
+//   })
+// );
 
 app.use("/api/v1/account", accountRouter);
 
