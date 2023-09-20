@@ -51,7 +51,7 @@ app.use(passport.session());
 
 // routes
 
-app.use(
+app.get(
   "/",
   catchAsync(async (req: Request, res: Response) => {
     res.status(200).json({
