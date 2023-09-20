@@ -24,6 +24,7 @@ const listener = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
+  console.log("connected to server");
 };
 const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
