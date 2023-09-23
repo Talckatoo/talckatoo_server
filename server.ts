@@ -1,5 +1,4 @@
 import { Socket } from "socket.io";
-import swaggerDocs from "./utils/swagger";
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const app = require("./app");
@@ -18,7 +17,6 @@ const DB = process?.env?.DATABASE?.replace(
 );
 
 mongoose.set("strictQuery", true);
-swaggerDocs(app, 8000);
 
 const listener = async () => {
   await mongoose.connect(DB, {

@@ -17,7 +17,7 @@ const swaggerUi = require("swagger-ui-express");
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
 const { globalErrorHandler } = require("./src/controllers/error-controller");
-const port: number = Number(process.env.PORT) || 3000;
+const port: number = Number(process.env.PORT) || 8000;
 
 // middleware
 // app.use(cors({ origin: true }));

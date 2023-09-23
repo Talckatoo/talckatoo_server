@@ -2,13 +2,7 @@ const express = require("express");
 const router = express.Router();
 import { Request, Response, NextFunction } from "express";
 
-const {
-  signUp,
-  logIn,
-  logOut,
-  //loginWithGoogle,
-  //redirectHome,
-} = require("../controllers/account-controller");
+const { signUp, logIn, logOut } = require("../controllers/account-controller");
 /**
  * @swagger
  * /api/v1/account/sign-up:
@@ -56,14 +50,7 @@ router.route("/sign-up").post(signUp);
  *       '401':
  *         description: Unauthorized
  */
-router.route("/log-in").post(logIn);
-// router.route("google").get(loginWithGoogle);
-// router
-//   .route("/google/callback")
-//   .get(redirectHome, (req: Request, res: Response) => {
-//     console.log("fire");
-//     res.redirect("/api/v1/");
-//   });
+
 router.route("/logout").post(logOut);
 
 export {};
