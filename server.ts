@@ -1,4 +1,5 @@
 import { Socket } from "socket.io";
+
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const app = require("./app");
@@ -9,8 +10,8 @@ const Message = require("./src/models/message-model");
 const Conversation = require("./src/models/conversation-model");
 const openAi = require("./utils/openai_config");
 
-dotenv.config({ path: "./config.env" });
-const { PORT = 8000 } = process.env;
+dotenv.config();
+
 const DB = process?.env?.DATABASE?.replace(
   "<password>",
   `${process.env.DATABASE_PASSWORD}`
@@ -23,9 +24,9 @@ const listener = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-  console.log(`app is running on port ${PORT}`);
+  console.log("connected to server");
 };
-
+const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
 
 const io = socket(server, {
@@ -52,6 +53,11 @@ io.on("connection", (socket: Socket) => {
     if (sendUserSocket) {
       io.to(sendUserSocket).emit("getMessage", data);
     }
+  });
+  socket.on("seenMessage", async (data) => {
+    const sendUserSocket = onlineUsers.get(data.from);
+    await Message.findOneAndUpdate({ _id: data.message._id }, { status: true });
+    io.to(sendUserSocket).emit("seenMessage");
   });
 
   socket.on("isTyping", (data: any) => {

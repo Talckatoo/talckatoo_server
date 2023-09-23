@@ -1,6 +1,6 @@
 const passport = require("passport");
 const dotenv = require("dotenv");
-dotenv.config({ path: "./config.env" });
+dotenv.config();
 const User = require("../src/models/user-model");
 
 import {
