@@ -13,6 +13,7 @@ const mainRouter = require("./src/routes/mainRouter");
 const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
 const swaggerUi = require("swagger-ui-express");
+const catchAsync = require("../../utils/catch-async");
 
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
@@ -53,14 +54,14 @@ app.use(passport.session());
 
 // routes
 
-// app.use(
-//   "/",
-//   catchAsync(async (req: Request, res: Response) => {
-//     res.status(200).json({
-//       success: "Welcome to Talckatoo API",
-//     });
-//   })
-// );
+app.get(
+  "/",
+  catchAsync(async (req: Request, res: Response) => {
+    res.status(200).json({
+      success: "Welcome to Talckatoo API",
+    });
+  })
+);
 
 app.use("/api/v1/account", accountRouter);
 

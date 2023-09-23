@@ -23,7 +23,6 @@ const listener = async () => {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   });
-
   console.log(`app is running on port ${PORT}`);
 };
 
