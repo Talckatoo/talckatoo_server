@@ -11,6 +11,12 @@ const options: swaggerJSDoc.Options = {
       title: "REST API Docs",
       version,
     },
+    servers: [
+      {
+        url: "/api/v1", // Specify the base URL for API version 1
+        description: "API Version 1",
+      },
+    ],
     components: {
       securitySchemes: {
         bearerAuth: {
