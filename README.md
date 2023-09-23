@@ -49,7 +49,9 @@ git clone git@github.com:Talckatoo/talckatoo_server.git
 cd talckatoo-server
 ```
 
-3. Install the project dependencies using npm.
+3. Create a .env file 
+
+4. Install the project dependencies using npm.
 
 ```bash
 npm install
