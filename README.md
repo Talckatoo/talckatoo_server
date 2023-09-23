@@ -78,7 +78,7 @@ Talckatoo is built with the following technologies:
 - [Socket.IO](https://socket.io/): Enables real-time, bidirectional, and event-based communication between the browser and the server.
 
 ## API docs
-- Swagger API documentation http://localhost:8000/api/v1/docs
+- Swagger API documentation `http://localhost:8000/api/v1/docs`
 
 ## 👥 Author
 
