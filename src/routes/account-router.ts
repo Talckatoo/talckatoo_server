@@ -50,6 +50,7 @@ router.route("/sign-up").post(signUp);
  *       '401':
  *         description: Unauthorized
  */
+router.route("/log-in").post(logIn);
 
 router.route("/logout").post(logOut);
 
