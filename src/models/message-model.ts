@@ -9,6 +9,7 @@ interface Imessage {
     public_id: String;
     url: String;
   };
+  status: Boolean;
 }
 
 // message schema
@@ -27,6 +28,10 @@ const messageSchema = new Schema<Imessage>(
     voiceNote: {
       public_id: String,
       url: String,
+    },
+    status: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

@@ -120,7 +120,7 @@ exports.getUserConversation = catchAsync(
 
     const populateOptions = [
       { path: "users", select: "userName profileImage language" },
-      { path: "messages", select: "message sender createdAt voiceNote" },
+      { path: "messages", select: "message sender createdAt voiceNote status" },
     ];
 
     const conversation = await Conversation.findOne({

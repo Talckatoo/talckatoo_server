@@ -54,6 +54,16 @@ io.on("connection", (socket: Socket) => {
       io.to(sendUserSocket).emit("getMessage", data);
     }
   });
+  socket.on("seenMessage", async (data) => {
+    const sendUserSocket = onlineUsers.get(data.from);
+    await Message.findOneAndUpdate({ _id: data.message._id }, { status: true });
+    io.to(sendUserSocket).emit("seenMessage");
+  });
+
+  socket.on("sendLatestMessage", (data: string) => {
+    console.log(data);
+    io.emit("getLatestMessage", data);
+  });
 
   socket.on("isTyping", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);
