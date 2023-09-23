@@ -13,7 +13,7 @@ const mainRouter = require("./src/routes/mainRouter");
 const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
 const swaggerUi = require("swagger-ui-express");
-const catchAsync = require("../../utils/catch-async");
+const catchAsync = require("./utils/catch-async");
 
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
