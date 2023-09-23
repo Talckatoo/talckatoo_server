@@ -1,5 +1,6 @@
 // types of the req, res and next...
 import { Request, Response, NextFunction } from "express";
+import swaggerDocs from "./utils/swagger";
 //
 const express = require("express");
 const app = express();
@@ -11,11 +12,12 @@ const passport = require("./utils/passport-config");
 const mainRouter = require("./src/routes/mainRouter");
 const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
-const catchAsync = require("./utils/catch-async");
+const swaggerUi = require("swagger-ui-express");
 
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
 const { globalErrorHandler } = require("./src/controllers/error-controller");
+const port: number = Number(process.env.PORT) || 3000;
 
 // middleware
 // app.use(cors({ origin: true }));
@@ -34,7 +36,7 @@ app.use((req: Request, res: Response, next: NextFunction) => {
 });
 
 app.use(express.json());
-
+swaggerDocs(app, port);
 app.use(express.urlencoded({ extended: false }));
 app.use(
   session({
