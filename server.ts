@@ -10,7 +10,7 @@ const Message = require("./src/models/message-model");
 const Conversation = require("./src/models/conversation-model");
 const openAi = require("./utils/openai_config");
 
-dotenv.config({ path: "./config.env" });
+dotenv.config();
 
 const DB = process?.env?.DATABASE?.replace(
   "<password>",
@@ -53,6 +53,11 @@ io.on("connection", (socket: Socket) => {
     if (sendUserSocket) {
       io.to(sendUserSocket).emit("getMessage", data);
     }
+  });
+  socket.on("seenMessage", async (data) => {
+    const sendUserSocket = onlineUsers.get(data.from);
+    await Message.findOneAndUpdate({ _id: data.message._id }, { status: true });
+    io.to(sendUserSocket).emit("seenMessage");
   });
 
   socket.on("isTyping", (data: any) => {
