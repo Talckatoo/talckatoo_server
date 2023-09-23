@@ -6,19 +6,8 @@ const { mainController } = require("../controllers/mainController");
  * @swagger
  * /api/v1/:
  *   get:
- *     summary: Get main controller
- *     tags: [Account]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               username:
- *                 type: string
- *               password:
- *                 type: string
+ *     summary: base URL
+ *     tags: [Base]
  *     responses:
  *       '200':
  *         description: Successfully

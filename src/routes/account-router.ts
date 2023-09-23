@@ -5,7 +5,7 @@ import { Request, Response, NextFunction } from "express";
 const { signUp, logIn, logOut } = require("../controllers/account-controller");
 /**
  * @swagger
- * /api/v1/account/sign-up:
+ * /account/sign-up:
  *   post:
  *     summary: Sign up a new user
  *     tags: [Account]
@@ -29,7 +29,7 @@ const { signUp, logIn, logOut } = require("../controllers/account-controller");
 router.route("/sign-up").post(signUp);
 /**
  * @swagger
- * /api/v1/account/log-in:
+ * /account/log-in:
  *   post:
  *     summary: Log in an existing user
  *     tags: [Account]
