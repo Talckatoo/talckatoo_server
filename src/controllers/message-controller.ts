@@ -69,6 +69,7 @@ exports.createMessage = catchAsync(
       targetLanguage,
       voiceToVoice,
       voiceTargetLanguage,
+      status
     } = req.body;
     const target = targetLanguage ? targetLanguage : "en";
 

@@ -206,3 +206,34 @@ exports.updateProfile = catchAsync(
     });
   }
 );
+
+exports.editUserConversation = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { conversationId } = req.body;
+    console.log(conversationId);
+
+    const populateOptions = [
+      { path: "users", select: "userName profileImage language" },
+      { path: "messages", select: "message sender createdAt voiceNote status" },
+    ];
+
+    const conversation = await Conversation.findOne({
+      _id: conversationId,
+    }).populate(populateOptions);
+    console.log(conversation);
+    const newMess = conversation.messages;
+    const newConversation = await newMess.map((m: any) => {
+      if (!m.status) {
+        return { ...m, status: true };
+      }
+      return m;
+    });
+    console.log({ newConversation: newConversation });
+
+    if (!conversation) {
+      throw new AppError("This conversation does not exist", 404);
+    }
+
+    res.status(200).json({ status: "Success", conversation });
+  }
+);
