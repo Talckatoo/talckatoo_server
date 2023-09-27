@@ -13,7 +13,9 @@ Link Demo: https://youtu.be/lkLmidpuwNU
 - [Installation](#installation)
 - [Usage](#usage)
 - [Technologies Used](#technologies-used)
-- [Backend](#backend)
+- [API Docs](#api-docs)
+- [Author](#author)
+- [Frontend](#frontend)
 - [Contributing](#contributing)
 - [License](#license)
 - [Thanks](#thanks)
@@ -49,7 +51,9 @@ git clone git@github.com:Talckatoo/talckatoo_server.git
 cd talckatoo-server
 ```
 
-3. Install the project dependencies using npm.
+3. Create a .env file 
+
+4. Install the project dependencies using npm.
 
 ```bash
 npm install
@@ -72,6 +76,9 @@ Talckatoo is built with the following technologies:
 - [Express]: Fast, unopinionated, minimalist web framework for Node.js.
 - [TypeScript](https://www.typescriptlang.org/): A typed superset of JavaScript that adds static types to the language.
 - [Socket.IO](https://socket.io/): Enables real-time, bidirectional, and event-based communication between the browser and the server.
+
+## API docs
+- Swagger API documentation `http://localhost:8000/api/v1/docs`
 
 ## 👥 Author
 

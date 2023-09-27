@@ -10,6 +10,7 @@
     "typeRoots": ["./src/types", "./node_modules/@types"],
     "strict": true,
     "esModuleInterop": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "node"

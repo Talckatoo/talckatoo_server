@@ -10,7 +10,7 @@ const Message = require("./src/models/message-model");
 const Conversation = require("./src/models/conversation-model");
 const openAi = require("./utils/openai_config");
 
-dotenv.config({ path: "./config.env" });
+dotenv.config();
 
 const DB = process?.env?.DATABASE?.replace(
   "<password>",
