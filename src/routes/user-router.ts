@@ -92,7 +92,9 @@ router.route("/:userId/conversations").get(getUserConversations);
  *         description: Unauthorized
  */
 router.route("/:userId/conversations/:conversationId").get(getUserConversation);
-router.route("/:userId/conversations").patch(editUserConversation);
+router
+  .route("/:userId/conversations/:conversationId/update")
+  .get(editUserConversation);
 
 export {};
 module.exports = router;

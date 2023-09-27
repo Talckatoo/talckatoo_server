@@ -7,7 +7,8 @@ const catchAsync = require("../../utils/catch-async");
 const AppError = require("../../utils/custom-error");
 const cloudinary = require("../../utils/cloudinary");
 const axios = require("axios");
-
+import { ObjectId } from "mongoose";
+import mongoose from "mongoose";
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId }: any = req.user;
@@ -209,8 +210,7 @@ exports.updateProfile = catchAsync(
 
 exports.editUserConversation = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { conversationId } = req.body;
-    console.log(conversationId);
+    const { conversationId, userId } = req.params;
 
     const populateOptions = [
       { path: "users", select: "userName profileImage language" },
@@ -220,19 +220,39 @@ exports.editUserConversation = catchAsync(
     const conversation = await Conversation.findOne({
       _id: conversationId,
     }).populate(populateOptions);
-    console.log(conversation);
-    const newMess = conversation.messages;
-    const newConversation = await newMess.map((m: any) => {
-      if (!m.status) {
-        return { ...m, status: true };
-      }
-      return m;
-    });
-    console.log({ newConversation: newConversation });
 
     if (!conversation) {
       throw new AppError("This conversation does not exist", 404);
     }
+
+    const newMessages = conversation.messages;
+    // console.log(newMessages)
+    let unreadMessages: ObjectId[] = [];
+    if (newMessages) {
+      newMessages.forEach((m: any, index: any) => {
+        console.log(m);
+        if (m.status == false && m.sender.toString() !== userId) {
+          unreadMessages.push(m._id);
+        }
+      });
+    }
+    console.log({ unreadMessages: unreadMessages });
+
+    // if (unreadMessages.length > 0) {
+    //   // Define an array of message IDs to update
+    //   const messageIdsToUpdate = unreadMessages.map((id) => mongoose.Types.ObjectId(id));
+
+    //   // Update the messages with the specified IDs to set status to true
+    //   await Conversation.updateMany(
+    //     {
+    //       _id: conversationId,
+    //       'messages._id': { $in: messageIdsToUpdate },
+    //     },
+    //     {
+    //       $set: { 'messages.$.status': true },
+    //     }
+    //   );
+    // }
 
     res.status(200).json({ status: "Success", conversation });
   }
