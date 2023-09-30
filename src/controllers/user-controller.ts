@@ -9,6 +9,7 @@ const cloudinary = require("../../utils/cloudinary");
 const axios = require("axios");
 import { ObjectId } from "mongoose";
 import mongoose from "mongoose";
+
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId }: any = req.user;
@@ -16,7 +17,7 @@ exports.getUsers = catchAsync(
 
     const populateOptions = {
       path: "conversations",
-      select: "_id createdAt updatedAt",
+      select: "_id createdAt updatedAt unread",
     };
 
     const contactedUsers = await User.find({
@@ -217,43 +218,64 @@ exports.editUserConversation = catchAsync(
       { path: "messages", select: "message sender createdAt voiceNote status" },
     ];
 
-    const conversation = await Conversation.findOne({
-      _id: conversationId,
-    }).populate(populateOptions);
+    let conversation = await Conversation.findOneAndUpdate(
+      { _id: conversationId },
+      {
+        $pull: { unread: userId },
+      },
+      { new: true }
+    ).populate(populateOptions);
 
     if (!conversation) {
       throw new AppError("This conversation does not exist", 404);
     }
 
-    const newMessages = conversation.messages;
-    // console.log(newMessages)
-    let unreadMessages: ObjectId[] = [];
-    if (newMessages) {
-      newMessages.forEach((m: any, index: any) => {
-        console.log(m);
-        if (m.status == false && m.sender.toString() !== userId) {
-          unreadMessages.push(m._id);
-        }
-      });
-    }
-    console.log({ unreadMessages: unreadMessages });
-
-    // if (unreadMessages.length > 0) {
-    //   // Define an array of message IDs to update
-    //   const messageIdsToUpdate = unreadMessages.map((id) => mongoose.Types.ObjectId(id));
-
-    //   // Update the messages with the specified IDs to set status to true
-    //   await Conversation.updateMany(
-    //     {
-    //       _id: conversationId,
-    //       'messages._id': { $in: messageIdsToUpdate },
-    //     },
-    //     {
-    //       $set: { 'messages.$.status': true },
-    //     }
-    //   );
-    // }
-
     res.status(200).json({ status: "Success", conversation });
   }
 );
+
+// exports.editUserConversation = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { conversationId, userId } = req.params;
+
+//     const populateOptions = [
+//       { path: "users", select: "userName profileImage language" },
+//       { path: "messages", select: "message sender createdAt voiceNote status" },
+//     ];
+
+//     const conversation = await Conversation.findOne({
+//       _id: conversationId,
+//     }).populate(populateOptions);
+
+//     if (!conversation) {
+//       throw new AppError("This conversation does not exist", 404);
+//     }
+
+//     const newMessages = conversation.messages;
+//     console.log(conversation);
+//     let unreadMessages: string[] = [];
+//     if (newMessages) {
+//       newMessages.forEach((m: any, index: any) => {
+//         console.log(m);
+//         if (m.status == false && m.sender.toString() !== userId) {
+//           unreadMessages.push(m._id.toString());
+//         }
+//       });
+//     }
+//     console.log({ unreadMessages: unreadMessages });
+//     if (unreadMessages) {
+//       const newCon = await Conversation.updateMany(
+//         {
+//           _id: conversationId,
+//           "messages._id": { $in: unreadMessages },
+//         },
+//         {
+//           $set: { "messages.$.status": true },
+//         },
+//         { upsert: true }
+//       );
+//     }
+
+//     res.status(200).json({ status: "Success", conversation });
+//   }
+// );
