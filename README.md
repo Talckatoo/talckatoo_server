@@ -79,6 +79,10 @@ Talckatoo is built with the following technologies:
 
 ## API docs
 - Swagger API documentation `http://localhost:8000/api/v1/docs`
+  <img width="1440" alt="image" src="https://github.com/Talckatoo/talckatoo_server/assets/109603295/1a5ea9da-5d7d-42aa-bf0e-71c29bc7de5e">
+  <img width="1440" alt="image" src="https://github.com/Talckatoo/talckatoo_server/assets/109603295/494c640a-8829-44d6-8962-59e08a3be807">
+
+
 
 ## 👥 Author
 
