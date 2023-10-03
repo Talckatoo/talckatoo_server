@@ -30,12 +30,12 @@ const UserSchema = new Schema<Iuser>({
   userName: {
     type: String,
     unique: true,
-    required: false,
+    required: [true, "please enter a username"],
     minLength: 5,
   },
   email: {
     type: String,
-    required: false,
+    required: [true, "please enter an email address"],
     unique: true,
     validate: [validator.isEmail, "please enter a valid email address"],
   },
