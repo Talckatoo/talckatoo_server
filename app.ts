@@ -17,6 +17,7 @@ const catchAsync = require("./utils/catch-async");
 
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
+import freindsRouter from "./src/routes/friendRequestRoutes";
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 const port: number = Number(process.env.PORT) || 8000;
 
@@ -76,6 +77,12 @@ app.get(
 );
 
 app.use("/api/v1/account", accountRouter);
+
+app.use(
+  "/api/v1/friends",
+  passport.authenticate(["jwt"], { session: true }),
+  freindsRouter
+);
 
 app.use(
   "/api/v1/users",
