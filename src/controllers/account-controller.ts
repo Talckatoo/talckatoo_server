@@ -5,17 +5,6 @@ const passport = require("../../utils/passport-config");
 const AppError = require("../../utils/custom-error");
 const Conversation = require("../models/conversation-model");
 const axios = require("axios");
-import nodemailer from "nodemailer";
-
-let transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: "aachourmohameddeveloper@gmail.com",
-    pass: "ryowdyxtjoaqbtsm",
-  },
-});
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
