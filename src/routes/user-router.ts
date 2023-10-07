@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 import { Request, Response, NextFunction } from "express";
 import {
+  getFriendRequests,
   handleFriendRequestResponse,
   sendFriendRequest,
 } from "../controllers/friendRequest.controller";
@@ -28,6 +29,8 @@ const {
  */
 router.route("/").get(getUsers);
 
+// get all friend requests by user id
+router.get("/requests", getFriendRequests);
 /**
  * @swagger
  * /users/:userId:

@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
-import friendRequestModel from "../models/friendRequest-model";
 import User from "../models/user-model";
+import friendRequestModel from "../models/friendRequest-model";
 
 // Error Constants
 const ERR_USER_NOT_FOUND = "User not found";
@@ -92,12 +92,13 @@ export const handleFriendRequestResponseService = async (
   friendRequestId: string,
   action: "accept" | "reject"
 ) => {
-  console.log(friendRequestId);
   // Step 1: Verify the friend request exists and is intended for the user
   const friendRequest = await friendRequestModel.findById({
     _id: friendRequestId,
   });
-  console.log("friendRequest", friendRequest);
+
+  console.log(friendRequest);
+  console.log("friendRequest", friendRequestId);
   if (!friendRequest || !(friendRequest.to.toString() === userId)) {
     throw new Error(ERR_INVITATION_NOT_FOUND);
   }
@@ -139,4 +140,27 @@ export const handleFriendRequestResponseService = async (
 
   // step5: return a message indicating the result of the operation
   return `Friend request ${action}ed successfully`;
+};
+
+/**
+ * Service to get a user's friend requests.
+ * @param userId - User ID.
+ * @returns Array of friend requests.
+ */
+export const getFriendRequestsService = async (userId: string) => {
+  // Step 1: Find All Friend Requests
+  const friendRequests = await friendRequestModel
+    .find({
+      $or: [{ from: userId }, { to: userId }],
+    })
+    .populate("from", "userName")
+    .populate("to", "userName")
+    .exec();
+
+  if (!friendRequests) {
+    throw new Error(ERR_INVITATION_NOT_FOUND);
+  }
+
+  // Step 2: Return Friend Requests
+  return friendRequests;
 };
