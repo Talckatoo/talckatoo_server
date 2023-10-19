@@ -5,6 +5,7 @@ import { Schema, model } from "mongoose";
 interface Iconversation {
   messages: Array<String>;
   users: Array<String>;
+  unread: Array<String>;
 }
 
 // conversation schema
@@ -20,6 +21,11 @@ const conversationSchema = new Schema<Iconversation>(
       {
         type: Schema.Types.ObjectId,
         ref: "User",
+      },
+    ],
+    unread: [
+      {
+        type: String, // recipientID
       },
     ],
   },

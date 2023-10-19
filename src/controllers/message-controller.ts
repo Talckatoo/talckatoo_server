@@ -69,7 +69,10 @@ exports.createMessage = catchAsync(
       targetLanguage,
       voiceToVoice,
       voiceTargetLanguage,
+      status,
+      unread,
     } = req.body;
+    console.log(unread);
     const target = targetLanguage ? targetLanguage : "en";
 
     if (!text || !to || !from) {
@@ -111,13 +114,18 @@ exports.createMessage = catchAsync(
 
       let conversation = await Conversation.findOneAndUpdate(
         { users: { $all: [from, to] } },
-        { $push: { messages: message.id } }
+        {
+          $push: { messages: message.id },
+          $addToSet: { unread: to }, // Push recipientID into the "unread" array if it doesn't already exist
+        },
+        { new: true }
       );
 
       if (!conversation) {
         conversation = await Conversation.create({
           messages: [message.id],
           users: [from, to],
+          unread: [to],
         });
 
         await User.findOneAndUpdate(
@@ -187,13 +195,18 @@ exports.createMessage = catchAsync(
 
             let conversation = await Conversation.findOneAndUpdate(
               { users: { $all: [from, to] } },
-              { $push: { messages: message.id } }
+              {
+                $push: { messages: message.id },
+                $addToSet: { unread: to }, // Push recipientID into the "unread" array if it doesn't already exist
+              },
+              { new: true }
             );
 
             if (!conversation) {
               conversation = await Conversation.create({
                 messages: [message.id],
                 users: [from, to],
+                unread: [to],
               });
 
               await User.findOneAndUpdate(

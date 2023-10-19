@@ -7,6 +7,8 @@ const catchAsync = require("../../utils/catch-async");
 const AppError = require("../../utils/custom-error");
 const cloudinary = require("../../utils/cloudinary");
 const axios = require("axios");
+import { ObjectId } from "mongoose";
+import mongoose from "mongoose";
 
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -15,7 +17,7 @@ exports.getUsers = catchAsync(
 
     const populateOptions = {
       path: "conversations",
-      select: "_id createdAt updatedAt",
+      select: "_id createdAt updatedAt unread",
     };
 
     const contactedUsers = await User.find({
@@ -120,7 +122,7 @@ exports.getUserConversation = catchAsync(
 
     const populateOptions = [
       { path: "users", select: "userName profileImage language" },
-      { path: "messages", select: "message sender createdAt voiceNote" },
+      { path: "messages", select: "message sender createdAt voiceNote status" },
     ];
 
     const conversation = await Conversation.findOne({
@@ -204,5 +206,30 @@ exports.updateProfile = catchAsync(
         user,
       });
     });
+  }
+);
+
+exports.editUserConversation = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { conversationId, userId } = req.params;
+
+    const populateOptions = [
+      { path: "users", select: "userName profileImage language" },
+      { path: "messages", select: "message sender createdAt voiceNote status" },
+    ];
+
+    let conversation = await Conversation.findOneAndUpdate(
+      { _id: conversationId },
+      {
+        $pull: { unread: userId },
+      },
+      { new: true }
+    ).populate(populateOptions);
+
+    if (!conversation) {
+      throw new AppError("This conversation does not exist", 404);
+    }
+
+    res.status(200).json({ status: "Success", conversation });
   }
 );
