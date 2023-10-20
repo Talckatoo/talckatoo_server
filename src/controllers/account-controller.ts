@@ -133,3 +133,47 @@ exports.logOut = catchAsync(
     }
   }
 );
+
+/**
+ * Login with Phone Number
+ * @param {string} phoneNumber
+ * sends a verification code to the user's phone number
+ * we will send the sms using react-native-sms package
+ */
+
+export const loginWithPhoneNumber = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      throw new AppError("Please provide a phone number", 400);
+    }
+
+    let user = await User.findOne({ phoneNumber });
+
+    // If the user does not exist, create a new user
+    if (!user) {
+      user = new User({
+        phoneNumber,
+      });
+    }
+
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    user.verificationCode = verificationCode;
+    await user.save();
+
+    res.status(200).json({
+      status: "Success",
+      message: "Verification code generated successfully",
+      verificationCode,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

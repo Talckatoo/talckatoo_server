@@ -11,15 +11,18 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 
 //user Interface
-interface Iuser {
+export interface Iuser {
   userName: String;
   email: String;
   password: String;
+  phoneNumber?: String;
   googleId: String;
   conversations: Array<String>;
   profileImage?: { public_id: String; url: String };
   language: String;
   welcome: String;
+  friendRequests: Array<String>;
+  friends: Array<String>;
 }
 
 //user schema
@@ -27,14 +30,18 @@ const UserSchema = new Schema<Iuser>({
   userName: {
     type: String,
     unique: true,
-    required: true,
+    required: [true, "please enter a username"],
     minLength: 5,
   },
   email: {
     type: String,
-    required: true,
+    required: [true, "please enter an email address"],
     unique: true,
     validate: [validator.isEmail, "please enter a valid email address"],
+  },
+  phoneNumber: {
+    type: String,
+    minlength: 10,
   },
   password: {
     type: String,
@@ -59,6 +66,18 @@ const UserSchema = new Schema<Iuser>({
   welcome: {
     type: String,
   },
+  friendRequests: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "FriendRequest",
+    },
+  ],
+  friends: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
 });
 
 UserSchema.pre("save", async function (next) {
@@ -83,6 +102,8 @@ UserSchema.methods.comparePassword = async function (userPassword: any) {
   return isMatch;
 };
 
-const User = model<Iuser>("User", UserSchema);
+export const User = model<Iuser>("User", UserSchema);
 export {};
 module.exports = User;
+
+export default User;

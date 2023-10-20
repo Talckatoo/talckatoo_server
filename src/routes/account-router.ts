@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 import { Request, Response, NextFunction } from "express";
+import { loginWithPhoneNumber } from "../controllers/account-controller";
 
 const { signUp, logIn, logOut } = require("../controllers/account-controller");
 /**
@@ -85,6 +86,8 @@ router.route("/sign-up").post(signUp);
 router.route("/log-in").post(logIn);
 
 router.route("/logout").post(logOut);
+
+router.route("/loginWithPhone").post(loginWithPhoneNumber);
 
 export {};
 module.exports = router;
