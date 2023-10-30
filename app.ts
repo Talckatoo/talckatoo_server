@@ -12,6 +12,7 @@ const passport = require("./utils/passport-config");
 const mainRouter = require("./src/routes/mainRouter");
 const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
+const groupsRoute = require("./src/routes/group-conversation-route");
 const swaggerUi = require("swagger-ui-express");
 const catchAsync = require("./utils/catch-async");
 
@@ -93,6 +94,11 @@ app.use(
   "/api/v1/",
   passport.authenticate(["jwt"], { session: true }),
   messageRouter
+);
+app.use(
+  "/api/v1/groups",
+  passport.authenticate(["jwt"], { session: true }),
+  groupsRoute
 );
 
 // handle requests that do not exist on our server

@@ -20,6 +20,7 @@ interface Iuser {
   profileImage?: { public_id: String; url: String };
   language: String;
   welcome: String;
+  groups: [Schema.Types.ObjectId];
 }
 
 //user schema
@@ -59,6 +60,7 @@ const UserSchema = new Schema<Iuser>({
   welcome: {
     type: String,
   },
+  groups: [Schema.Types.ObjectId],
 });
 
 UserSchema.pre("save", async function (next) {

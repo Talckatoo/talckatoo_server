@@ -1,3 +1,5 @@
+import { Request, Response, NextFunction } from "express";
+
 import { Socket } from "socket.io";
 
 const mongoose = require("mongoose");
@@ -9,7 +11,10 @@ const User = require("./src/models/user-model");
 const Message = require("./src/models/message-model");
 const Conversation = require("./src/models/conversation-model");
 const openAi = require("./utils/openai_config");
-
+const catchAsync = require("./utils/catch-async");
+const GroupConversation = require("./src/models/group-conversation-model");
+const GroupMessages = require("./src/models/group-message-model");
+const axios = require("axios");
 dotenv.config();
 
 const DB = process?.env?.DATABASE?.replace(
@@ -26,7 +31,7 @@ const listener = async () => {
   });
   console.log("connected to server");
 };
-const { PORT = 8000 } = process.env;
+const { PORT = 3000 } = process.env;
 const server = app.listen(PORT, listener);
 
 const io = socket(server, {
@@ -47,6 +52,52 @@ io.on("connection", (socket: Socket) => {
     onlineUsers.set(userId, socket.id);
     io.emit("getUsers", Array.from(onlineUsers));
   });
+  socket.on("joinRoom", (conversation: any) => {
+    socket.join(conversation);
+  });
+  socket.on(
+    "sendGroupMessage",
+    async ({ conversationId, userId, message: text }) => {
+      console.log(conversationId);
+      const conversation = await GroupConversation.findOne({
+        _id: conversationId,
+      });
+      if (!conversation)
+        throw new AppError("no group conversation found for that id", 404);
+
+      const messagesArray = conversation?.defaultLanguages?.map(
+        async (language: string) => {
+          console.log(language);
+
+          const options = {
+            method: "POST",
+            url: process.env.TRANSLATE_URL,
+            headers: {
+              "content-type": "application/json",
+              "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
+              "X-RapidAPI-Host": process.env.API_HOST,
+            },
+            data: {
+              text,
+              target: language,
+            },
+          };
+          const response = await axios.request(options);
+          return { message: response.data[0].result.text, language };
+        }
+      );
+
+      const translatedMessages = await Promise.all(messagesArray);
+
+      const message = await GroupMessages.create({
+        createdBy: userId,
+        messagesArray: translatedMessages,
+        conversation,
+      });
+
+      io.to(conversation).emit("groupMessage", message);
+    }
+  );
 
   socket.on("sendMessage", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);
