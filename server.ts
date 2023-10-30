@@ -31,7 +31,7 @@ const listener = async () => {
   });
   console.log("connected to server");
 };
-const { PORT = 3000 } = process.env;
+const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
 
 const io = socket(server, {
@@ -67,8 +67,6 @@ io.on("connection", (socket: Socket) => {
 
       const messagesArray = conversation?.defaultLanguages?.map(
         async (language: string) => {
-          console.log(language);
-
           const options = {
             method: "POST",
             url: process.env.TRANSLATE_URL,
