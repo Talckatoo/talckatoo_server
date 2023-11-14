@@ -14,7 +14,7 @@ const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
 const swaggerUi = require("swagger-ui-express");
 const catchAsync = require("./utils/catch-async");
-
+app.use(express.json());
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
 const { globalErrorHandler } = require("./src/controllers/error-controller");
@@ -36,7 +36,6 @@ app.use((req: Request, res: Response, next: NextFunction) => {
   next();
 });
 
-app.use(express.json());
 swaggerDocs(app, port);
 app.use(express.urlencoded({ extended: false }));
 app.use(
