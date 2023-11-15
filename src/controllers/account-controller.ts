@@ -17,21 +17,21 @@ exports.signUp = catchAsync(
       );
     }
 
-    const options = {
-      method: "POST",
-      url: process.env.TRANSLATE_URL,
-      headers: {
-        "content-type": "application/json",
-        "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
-        "X-RapidAPI-Host": process.env.API_HOST,
-      },
-      data: {
+    const response = await axios.post(
+      process.env.NEW_API_URL,
+      {
         text: "welcome",
-        target: language,
+        target_lang: language.toUpperCase(),
       },
-    };
-    const response = await axios.request(options);
-    const welcome = response.data[0].result.text;
+      {
+        headers: {
+          Authorization: `DeepL-Auth-Key ${process.env.AUTH_KEY}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    const welcome = response.data.translations[0].text;
 
     const user = await User.create({
       userName,
