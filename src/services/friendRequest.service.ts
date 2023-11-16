@@ -26,7 +26,7 @@ async function findTargetUser(identifier: string) {
   } else if (/^\d+$/.test(identifier)) {
     query = { phoneNumber: identifier };
   } else {
-    query = { userName: identifier };
+    query = { _id: identifier };
   }
   return User.findOne(query);
 }
