@@ -60,7 +60,7 @@ const UserSchema = new Schema<Iuser>({
   welcome: {
     type: String,
   },
-  groups: [Schema.Types.ObjectId],
+  groups: [{ type: Schema.Types.ObjectId, ref: "GroupConversations" }],
 });
 
 UserSchema.pre("save", async function (next) {

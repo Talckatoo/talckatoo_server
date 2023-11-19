@@ -73,3 +73,24 @@ exports.joinGroup = catchAsync(
     });
   }
 );
+
+exports.getUserGroups = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.params;
+
+    const user = await User.findById(userId)
+      .select("groups")
+      .populate("groups");
+
+    if (!user) {
+      return res.status(404).json({
+        error: "User not found",
+      });
+    }
+
+    res.status(200).json({
+      success: "success",
+      groups: user.groups,
+    });
+  }
+);
