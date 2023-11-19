@@ -113,11 +113,7 @@ export const handleFriendRequestResponse = async (
   }
 };
 
-export const handleFindUsers = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+export const handleFindUsers = async (req: Request, res: Response) => {
   const { identifier } = req.body;
   let query;
   if (identifier.includes("@")) {
@@ -128,7 +124,6 @@ export const handleFindUsers = async (
     query = { userName: identifier };
   }
 
-  const seachedUser = User.findOne(query);
-  console.log(seachedUser);
+  const seachedUser = await User.findOne(query);
   res.status(200).json({ seachedUser });
 };
