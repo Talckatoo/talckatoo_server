@@ -75,7 +75,10 @@ exports.logIn = catchAsync(
       );
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate({
+      path: "friends",
+      select: "userName profileImage language",
+    });
 
     if (!user) {
       throw new AppError(" The user for this email could not be found.", 400);
