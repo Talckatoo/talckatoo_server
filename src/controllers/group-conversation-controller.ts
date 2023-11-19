@@ -5,6 +5,7 @@ const GroupConversation = require("../models/group-conversation-model");
 const User = require("../models/user-model");
 const multiparty = require("multiparty");
 const cloudinary = require("../../utils/cloudinary");
+const AppError = require("../../utils/custom-error");
 
 exports.createGroup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -14,24 +15,27 @@ exports.createGroup = catchAsync(
 
     form.parse(req, async function (err: any, fields: any, files: any) {
       let result: any;
-
-      if (files.image) {
-        if (
-          files.image[0].originalFilename.substr(-4, 4) == ".png" ||
-          files.image[0].originalFilename.substr(-4, 4) == ".jpg" ||
-          files.image[0].originalFilename.substr(-4, 4) == "jpeg"
-        ) {
-          result = await cloudinary.uploader.upload(files.image[0].path, {
-            folder: "groupConversationProfile",
-          });
-        } else {
-          return next(
-            new AppError(
-              "the only image format accepted are .jpg, .png and .jpeg",
-              422
-            )
-          );
+      try {
+        if (files.image) {
+          if (
+            files.image[0].originalFilename.substr(-4, 4) == ".png" ||
+            files.image[0].originalFilename.substr(-4, 4) == ".jpg" ||
+            files.image[0].originalFilename.substr(-4, 4) == "jpeg"
+          ) {
+            result = await cloudinary.uploader.upload(files.image[0].path, {
+              folder: "groupConversationProfile",
+            });
+          } else {
+            return next(
+              new AppError(
+                "the only image format accepted are .jpg, .png and .jpeg",
+                422
+              )
+            );
+          }
         }
+      } catch (err) {
+        throw new AppError("Error", 404);
       }
 
       const { name, defaultLanguages } = fields;
