@@ -51,6 +51,11 @@ exports.createGroup = catchAsync(
         createObj.defaultLanguages = JSON.parse(defaultLanguages[0]);
 
       const groupConversation = await GroupConversation.create(createObj);
+      await User.findByIdAndUpdate(
+        userId,
+        { $push: { groups: groupConversation._id } },
+        { new: true }
+      );
 
       res.status(200).json({
         success: "success",
@@ -64,11 +69,10 @@ exports.joinGroup = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { conversationId, userId } = req.params;
 
-    // Update the user document to add the conversation to the 'groups' array.
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      { $push: { groups: conversationId } }, // Use $push to add the conversation to the 'groups' array
-      { new: true } // Return the updated user document
+      { $push: { groups: conversationId } },
+      { new: true }
     );
 
     res.status(200).json({
@@ -85,7 +89,6 @@ exports.getUserGroups = catchAsync(
     const user = await User.findById(userId)
       .select("groups")
       .populate("groups");
-
     if (!user) {
       return res.status(404).json({
         error: "User not found",
