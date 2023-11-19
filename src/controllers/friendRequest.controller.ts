@@ -5,6 +5,7 @@ import {
   sendFriendRequestService,
 } from "../services/friendRequest.service";
 import jwt from "jsonwebtoken";
+const User = require("../models/user-model");
 
 /**
  * Controller to get all friend requests.
@@ -110,4 +111,19 @@ export const handleFriendRequestResponse = async (
   } catch (error) {
     next(error);
   }
+};
+
+export const handleFindUsers = async (req: Request, res: Response) => {
+  const { identifier } = req.body;
+  let query;
+  if (identifier.includes("@")) {
+    query = { email: identifier };
+  } else if (/^\d+$/.test(identifier)) {
+    query = { phoneNumber: identifier };
+  } else {
+    query = { userName: identifier };
+  }
+
+  const seachedUser = await User.findOne(query);
+  res.status(200).json({ seachedUser });
 };

@@ -5,6 +5,7 @@ import {
   getFriendRequests,
   handleFriendRequestResponse,
   sendFriendRequest,
+  handleFindUsers,
 } from "../controllers/friendRequest.controller";
 
 const {
@@ -108,5 +109,8 @@ router.post("/send", sendFriendRequest);
 
 // route for accepting or rejecting a friend request
 router.post("/action", handleFriendRequestResponse);
+// route to look for users
+
+router.post("/search", handleFindUsers);
 export {};
 module.exports = router;
