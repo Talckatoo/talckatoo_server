@@ -1,6 +1,12 @@
 const express = require("express");
 const router = express.Router();
 import { Request, Response, NextFunction } from "express";
+import {
+  getFriendRequests,
+  handleFriendRequestResponse,
+  sendFriendRequest,
+  handleFindUsers,
+} from "../controllers/friendRequest.controller";
 
 const {
   getUsers,
@@ -25,6 +31,8 @@ const {
  */
 router.route("/").get(getUsers);
 
+// get all friend requests by user id
+router.get("/requests", getFriendRequests);
 /**
  * @swagger
  * /users/:userId:
@@ -96,5 +104,13 @@ router
   .route("/:userId/conversations/:conversationId/update")
   .get(editUserConversation);
 
+// route for sending a friend request
+router.post("/send", sendFriendRequest);
+
+// route for accepting or rejecting a friend request
+router.post("/action", handleFriendRequestResponse);
+// route to look for users
+
+router.post("/search", handleFindUsers);
 export {};
 module.exports = router;

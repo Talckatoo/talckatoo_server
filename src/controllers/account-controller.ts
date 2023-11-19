@@ -17,21 +17,21 @@ exports.signUp = catchAsync(
       );
     }
 
-    const options = {
-      method: "POST",
-      url: process.env.TRANSLATE_URL,
-      headers: {
-        "content-type": "application/json",
-        "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
-        "X-RapidAPI-Host": process.env.API_HOST,
-      },
-      data: {
+    const response = await axios.post(
+      process.env.NEW_API_URL,
+      {
         text: "welcome",
-        target: language,
+        target_lang: language.toUpperCase(),
       },
-    };
-    const response = await axios.request(options);
-    const welcome = response.data[0].result.text;
+      {
+        headers: {
+          Authorization: `DeepL-Auth-Key ${process.env.AUTH_KEY}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+      }
+    );
+
+    const welcome = response.data.translations[0].text;
 
     const user = await User.create({
       userName,
@@ -75,7 +75,10 @@ exports.logIn = catchAsync(
       );
     }
 
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).populate({
+      path: "friends",
+      select: "userName profileImage language",
+    });
 
     if (!user) {
       throw new AppError(" The user for this email could not be found.", 400);
@@ -133,3 +136,47 @@ exports.logOut = catchAsync(
     }
   }
 );
+
+/**
+ * Login with Phone Number
+ * @param {string} phoneNumber
+ * sends a verification code to the user's phone number
+ * we will send the sms using react-native-sms package
+ */
+
+export const loginWithPhoneNumber = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      throw new AppError("Please provide a phone number", 400);
+    }
+
+    let user = await User.findOne({ phoneNumber });
+
+    // If the user does not exist, create a new user
+    if (!user) {
+      user = new User({
+        phoneNumber,
+      });
+    }
+
+    const verificationCode = Math.floor(
+      100000 + Math.random() * 900000
+    ).toString();
+    user.verificationCode = verificationCode;
+    await user.save();
+
+    res.status(200).json({
+      status: "Success",
+      message: "Verification code generated successfully",
+      verificationCode,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
