@@ -7,6 +7,7 @@ import {
   sendFriendRequest,
   handleFindUsers,
 } from "../controllers/friendRequest.controller";
+import { getFriends } from "../controllers/user-controller";
 
 const {
   getUsers,
@@ -33,6 +34,9 @@ router.route("/").get(getUsers);
 
 // get all friend requests by user id
 router.get("/requests", getFriendRequests);
+
+// get all the friends of a user
+router.get("/friends", getFriends);
 /**
  * @swagger
  * /users/:userId:

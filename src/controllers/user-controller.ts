@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 const multiparty = require("multiparty");
 const User = require("../models/user-model");
 const Message = require("../models/message-model");
@@ -79,6 +80,114 @@ exports.getUsers = catchAsync(
     });
   }
 );
+
+/**
+ * Controller to get all friends of a user.
+ * @param req - Request object.
+ * @param res - Response object.
+ */
+export const getFriends = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Extract the JWT token from the Authorization header
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
+    // Decode the token to get user data
+    let decoded: any;
+    if (token) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    }
+
+    // The "from" user is the one who owns the token
+    const userId = decoded?.userId;
+
+    // GET THE CURRENT USER
+    const currentUser = await User.findById(userId);
+
+    console.log("current user", currentUser);
+
+    const contactedUsers = await await User.find({ _id: userId })
+      .select("friends")
+      .populate({
+        path: "friends",
+        select: "_id userName profileImage language conversations",
+        populate: {
+          path: "conversations",
+          select: "_id createdAt updatedAt unread",
+          match: { _id: { $in: currentUser.conversations } },
+        },
+      });
+
+    console.log("friends", contactedUsers[0].friends.conversations);
+
+    const modifiedUsers = contactedUsers[0].friends.map((user: any) => {
+      console.log("user from modifiedUsers", user);
+      return {
+        _id: user._id,
+        userName: user.userName,
+        profileImage: user.profileImage,
+        conversation: user.conversations[0],
+        conversations: undefined,
+        language: user.language,
+      };
+    });
+
+    modifiedUsers.sort((a: any, b: any) => {
+      if (
+        a.conversation["updatedAt"].getTime() <
+        b.conversation["updatedAt"].getTime()
+      ) {
+        return 1;
+      }
+
+      if (
+        a.conversation["updatedAt"].getTime() >
+        b.conversation["updatedAt"].getTime()
+      ) {
+        return -1;
+      }
+
+      return 0;
+    });
+
+    let uncontactedUsers = await User.find({ _id: userId })
+      .select("friends")
+      .populate({
+        path: "friends",
+        select: "_id userName profileImage language conversations",
+        populate: {
+          path: "conversations",
+          select: "_id createdAt updatedAt unread",
+          match: { _id: { $nin: currentUser.conversations } },
+        },
+      });
+
+    uncontactedUsers = uncontactedUsers[0].friends.filter((user: any) => {
+      return contactedUsers[0].friends.every((contactedUser: any) => {
+        return contactedUser._id.toString() !== user._id.toString();
+      });
+    });
+
+    if (contactedUsers.length < 1 && uncontactedUsers.length < 1) {
+      res
+        .status(200)
+        .json({ status: "Success", message: "There are currently no users" });
+    }
+
+    res.status(200).json({
+      status: "Success",
+      users: {
+        contactedUsers: modifiedUsers,
+        uncontactedUsers: uncontactedUsers,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
