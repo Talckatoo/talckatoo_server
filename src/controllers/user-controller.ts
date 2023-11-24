@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import jwt from "jsonwebtoken";
 const multiparty = require("multiparty");
 const User = require("../models/user-model");
 const Message = require("../models/message-model");
@@ -79,6 +80,80 @@ exports.getUsers = catchAsync(
     });
   }
 );
+
+/**
+ * Controller to get all friends of a user.
+ * @param req - Request object.
+ * @param res - Response object.
+ */
+export const getFriends = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    // Extract the JWT token from the Authorization header
+    const token = req.header("Authorization")?.replace("Bearer ", "");
+
+    // Decode the token to get user data
+    let decoded: any;
+    if (token) {
+      decoded = jwt.verify(token, process.env.JWT_SECRET!);
+    }
+
+    // The "from" user is the one who owns the token
+    const userId = decoded?.userId;
+
+    // GET THE CURRENT USER
+    const currentUser = await User.findById(userId);
+
+    console.log("current user", currentUser);
+
+    const friends = await User.findById(userId)
+      .select("friends")
+      .populate("friends");
+
+    console.log("friends", friends);
+
+    let contactedUsers: any[] = [];
+    let uncontactedUsers: any[] = [];
+
+    friends.friends.forEach((friend: any) => {
+      // Check if there's a shared conversation ID
+      const sharedConversation = friend.conversations.find(
+        (conversationId: any) =>
+          currentUser.conversations.includes(conversationId)
+      );
+
+      if (sharedConversation) {
+        contactedUsers.push({
+          _id: friend._id,
+          userName: friend.userName,
+          conversation: sharedConversation,
+          profileImage: friend.profileImage,
+          language: friend.language,
+        });
+      } else {
+        uncontactedUsers.push({
+          _id: friend._id,
+          userName: friend.userName,
+          profileImage: friend.profileImage,
+          language: friend.language,
+        });
+      }
+    });
+
+    res.status(200).json({
+      status: "Success",
+      users: {
+        contactedUsers,
+        uncontactedUsers,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.getUser = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
