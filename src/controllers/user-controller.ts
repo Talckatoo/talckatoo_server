@@ -107,13 +107,9 @@ export const getFriends = async (
     // GET THE CURRENT USER
     const currentUser = await User.findById(userId);
 
-    console.log("current user", currentUser);
-
     const friends = await User.findById(userId)
       .select("friends")
       .populate("friends");
-
-    console.log("friends", friends);
 
     let contactedUsers: any[] = [];
     let uncontactedUsers: any[] = [];

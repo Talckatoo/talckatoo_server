@@ -17,7 +17,6 @@ exports.createGroupMessage = catchAsync(
 
     const messagesArray = conversation?.defaultLanguages?.map(
       async (language: string) => {
-        console.log(language);
         const { message: text } = req.body;
         const options = {
           method: "POST",

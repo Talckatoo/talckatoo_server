@@ -96,7 +96,6 @@ export const handleFriendRequestResponseService = async (
   const friendRequest = await friendRequestModel.findById({
     _id: friendRequestId,
   });
-
   if (!friendRequest || !(friendRequest.to.toString() === userId)) {
     throw new Error(ERR_INVITATION_NOT_FOUND);
   }
