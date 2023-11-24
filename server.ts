@@ -58,7 +58,6 @@ io.on("connection", (socket: Socket) => {
   socket.on(
     "sendGroupMessage",
     async ({ conversationId, userId, message: text }) => {
-      console.log(conversationId);
       const conversation = await GroupConversation.findOne({
         _id: conversationId,
       });
