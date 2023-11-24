@@ -113,6 +113,7 @@ export const handleFriendRequestResponse = async (
   }
 };
 
+
 export const handleFindUsers = async (req: Request, res: Response) => {
   const { identifier } = req.body;
   let query;

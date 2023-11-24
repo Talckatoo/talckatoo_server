@@ -21,6 +21,7 @@ export interface Iuser {
   profileImage?: { public_id: String; url: String };
   language: String;
   welcome: String;
+  groups: [Schema.Types.ObjectId];
   friendRequests: Array<String>;
   friends: Array<String>;
 }
@@ -66,6 +67,7 @@ const UserSchema = new Schema<Iuser>({
   welcome: {
     type: String,
   },
+  groups: [{ type: Schema.Types.ObjectId, ref: "GroupConversations" }],
   friendRequests: [
     {
       type: Schema.Types.ObjectId,
