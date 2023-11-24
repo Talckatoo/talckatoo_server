@@ -44,7 +44,6 @@ exports.createGroup = catchAsync(
         profilePic: { public_id: result?.public_id, url: result?.secure_url },
         createdBy: userId,
       };
-      console.log(name);
 
       if (name) createObj.name = name[0];
       if (defaultLanguages)
