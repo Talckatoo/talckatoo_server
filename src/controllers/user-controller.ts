@@ -118,18 +118,25 @@ export const getFriends = async (
     let contactedUsers: any[] = [];
     let uncontactedUsers: any[] = [];
 
-    friends.friends.forEach((friend: any) => {
+    for (const friend of friends.friends) {
       // Check if there's a shared conversation ID
       const sharedConversation = friend.conversations.find(
         (conversationId: any) =>
           currentUser.conversations.includes(conversationId)
       );
 
+      // get the conversation object
+      const conversation = sharedConversation
+        ? await Conversation.findById(sharedConversation)
+        : null;
+
+      console.log("conversation", conversation);
+
       if (sharedConversation) {
         contactedUsers.push({
           _id: friend._id,
           userName: friend.userName,
-          conversation: sharedConversation,
+          conversation: conversation,
           profileImage: friend.profileImage,
           language: friend.language,
         });
@@ -141,7 +148,7 @@ export const getFriends = async (
           language: friend.language,
         });
       }
-    });
+    }
 
     res.status(200).json({
       status: "Success",
