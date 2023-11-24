@@ -109,79 +109,43 @@ export const getFriends = async (
 
     console.log("current user", currentUser);
 
-    const contactedUsers = await await User.find({ _id: userId })
+    const friends = await User.findById(userId)
       .select("friends")
-      .populate({
-        path: "friends",
-        select: "_id userName profileImage language conversations",
-        populate: {
-          path: "conversations",
-          select: "_id createdAt updatedAt unread",
-          match: { _id: { $in: currentUser.conversations } },
-        },
-      });
+      .populate("friends");
 
-    console.log("friends", contactedUsers[0].friends.conversations);
+    console.log("friends", friends);
 
-    const modifiedUsers = contactedUsers[0].friends.map((user: any) => {
-      console.log("user from modifiedUsers", user);
-      return {
-        _id: user._id,
-        userName: user.userName,
-        profileImage: user.profileImage,
-        conversation: user.conversations[0],
-        conversations: undefined,
-        language: user.language,
-      };
-    });
+    let contactedUsers: any[] = [];
+    let uncontactedUsers: any[] = [];
 
-    modifiedUsers.sort((a: any, b: any) => {
-      if (
-        a.conversation["updatedAt"].getTime() <
-        b.conversation["updatedAt"].getTime()
-      ) {
-        return 1;
+    friends.friends.forEach((friend: any) => {
+      // Check if there's a shared conversation ID
+      const sharedConversation = friend.conversations.find(
+        (conversationId: any) =>
+          currentUser.conversations.includes(conversationId)
+      );
+
+      if (sharedConversation) {
+        contactedUsers.push({
+          _id: friend._id,
+          userName: friend.userName,
+          conversation: sharedConversation,
+          profileImage: friend.profileImage,
+        });
+      } else {
+        uncontactedUsers.push({
+          _id: friend._id,
+          userName: friend.userName,
+          profileImage: friend.profileImage,
+        });
       }
-
-      if (
-        a.conversation["updatedAt"].getTime() >
-        b.conversation["updatedAt"].getTime()
-      ) {
-        return -1;
-      }
-
-      return 0;
     });
-
-    let uncontactedUsers = await User.find({ _id: userId })
-      .select("friends")
-      .populate({
-        path: "friends",
-        select: "_id userName profileImage language conversations",
-        populate: {
-          path: "conversations",
-          select: "_id createdAt updatedAt unread",
-          match: { _id: { $nin: currentUser.conversations } },
-        },
-      });
-
-    uncontactedUsers = uncontactedUsers[0].friends.filter((user: any) => {
-      return contactedUsers[0].friends.every((contactedUser: any) => {
-        return contactedUser._id.toString() !== user._id.toString();
-      });
-    });
-
-    if (contactedUsers.length < 1 && uncontactedUsers.length < 1) {
-      res
-        .status(200)
-        .json({ status: "Success", message: "There are currently no users" });
-    }
 
     res.status(200).json({
       status: "Success",
       users: {
-        contactedUsers: modifiedUsers,
-        uncontactedUsers: uncontactedUsers,
+        contactedUsers,
+        uncontactedUsers,
       },
     });
   } catch (error) {
