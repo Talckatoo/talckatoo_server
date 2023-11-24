@@ -131,12 +131,14 @@ export const getFriends = async (
           userName: friend.userName,
           conversation: sharedConversation,
           profileImage: friend.profileImage,
+          language: friend.language,
         });
       } else {
         uncontactedUsers.push({
           _id: friend._id,
           userName: friend.userName,
           profileImage: friend.profileImage,
+          language: friend.language,
         });
       }
     });
