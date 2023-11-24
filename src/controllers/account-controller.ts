@@ -35,7 +35,7 @@ exports.signUp = catchAsync(
 
     const user = await User.create({
       userName,
-      email,
+      email: email.toLowerCase(),
       password,
       language,
       welcome,

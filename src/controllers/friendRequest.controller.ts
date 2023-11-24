@@ -113,6 +113,19 @@ export const handleFriendRequestResponse = async (
 
 export const handleFindUsers = async (req: Request, res: Response) => {
   const { identifier } = req.body;
+
+  // Extract the JWT token from the Authorization header
+  const token = req.header("Authorization")?.replace("Bearer ", "");
+
+  // Decode the token to get user data
+  let decoded: any;
+  if (token) {
+    decoded = jwt.verify(token, process.env.JWT_SECRET!);
+  }
+
+  // The "from" user is the one who owns the token
+  const userId = decoded?.userId;
+
   let query;
   if (identifier.includes("@")) {
     query = { email: identifier };
@@ -123,5 +136,26 @@ export const handleFindUsers = async (req: Request, res: Response) => {
   }
 
   const seachedUser = await User.findOne(query);
-  res.status(200).json({ seachedUser });
+
+  if (!seachedUser) {
+    return res.status(404).json({ message: "User not found" });
+  }
+
+  if (seachedUser._id.toString() === userId) {
+    return res.status(400).json({ message: "Cannot send to self" });
+  }
+
+  const friendRequests = await getFriendRequestsService(userId);
+
+  const existingFriendRequest = friendRequests.find(
+    (friendRequest: any) =>
+      friendRequest.from._id.toString() === seachedUser._id.toString() ||
+      friendRequest.to._id.toString() === seachedUser._id.toString()
+  );
+
+  if (existingFriendRequest) {
+    return res.status(400).json({ message: "Friend request already sent" });
+  }
+
+  return res.status(200).json({ seachedUser });
 };
