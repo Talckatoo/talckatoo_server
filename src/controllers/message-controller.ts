@@ -190,9 +190,9 @@ exports.createMessage = catchAsync(
           if (error) {
             console.log(error);
           } else {
-            const { public_id, url } = result;
+            const { public_id, secure_url } = result;
             const message = await Message.create({
-              voiceNote: { public_id, url },
+              voiceNote: { public_id, url: secure_url },
               sender: from,
             });
 
@@ -250,9 +250,9 @@ exports.createVoiceNote = catchAsync(
           resource_type: "video",
           folder: "voice-notes",
         });
-        const { public_id, url } = data;
+        const { public_id, secure_url } = data;
         const message = await Message.create({
-          voiceNote: { public_id, url },
+          voiceNote: { public_id, url: secure_url },
           sender: from,
         });
 

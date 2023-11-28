@@ -232,7 +232,9 @@ exports.updateProfile = catchAsync(
         ) {
           result = await cloudinary.uploader.upload(files.image[0].path, {
             folder: "profile",
+            secure: true,
           });
+          console.log(result);
         } else {
           return next(
             new AppError(
@@ -248,7 +250,7 @@ exports.updateProfile = catchAsync(
       if (public_id) cloudinary.uploader.destroy(public_id[0]);
 
       let updateObj: any = {
-        profileImage: { public_id: result?.public_id, url: result?.url },
+        profileImage: { public_id: result?.public_id, url: result?.secure_url },
       };
       if (!updateObj.profileImage.public_id) updateObj = {};
 
