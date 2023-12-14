@@ -3,7 +3,13 @@ const router = express.Router();
 import { Request, Response, NextFunction } from "express";
 import { loginWithPhoneNumber } from "../controllers/account-controller";
 
-const { signUp, logIn, logOut } = require("../controllers/account-controller");
+const {
+  signUp,
+  logIn,
+  logOut,
+  forgotPassword,
+  resetPassword,
+} = require("../controllers/account-controller");
 /**
  * @swagger
  * components:
@@ -88,6 +94,9 @@ router.route("/log-in").post(logIn);
 router.route("/logout").post(logOut);
 
 router.route("/loginWithPhone").post(loginWithPhoneNumber);
+
+router.route("/forgot-password").post(forgotPassword);
+router.route("/reset-password/:token").post(resetPassword);
 
 export {};
 module.exports = router;

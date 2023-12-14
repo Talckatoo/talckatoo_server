@@ -10,6 +10,8 @@ const validator = require("validator");
 //for encrypting user password
 const bcrypt = require("bcryptjs");
 
+const crypto = require("crypto");
+
 //user Interface
 export interface Iuser {
   userName: String;
@@ -24,6 +26,8 @@ export interface Iuser {
   groups: [Schema.Types.ObjectId];
   friendRequests: Array<String>;
   friends: Array<String>;
+  passwordResetToken: String;
+  passwordResetTokenExpires: Date;
 }
 
 //user schema
@@ -80,6 +84,8 @@ const UserSchema = new Schema<Iuser>({
       ref: "User",
     },
   ],
+  passwordResetToken: String,
+  passwordResetTokenExpires: Date,
 });
 
 UserSchema.pre("save", async function (next) {
@@ -102,6 +108,17 @@ UserSchema.methods.createJWT = function () {
 UserSchema.methods.comparePassword = async function (userPassword: any) {
   const isMatch = await bcrypt.compare(userPassword, this.password);
   return isMatch;
+};
+
+UserSchema.methods.createPasswordResetToken = function () {
+  const resetToken = crypto.randomBytes(32).toString("hex");
+
+  this.passwordResetToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  this.passwordResetTokenExpires = Date.now() + 10 * 60 * 1000;
+  return resetToken;
 };
 
 export const User = model<Iuser>("User", UserSchema);
