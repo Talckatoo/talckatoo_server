@@ -197,8 +197,24 @@ exports.getUserConversations = catchAsync(
 exports.getUserConversation = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { conversationId } = req.params;
+    const { page, limit, fromDate, toDate } = req.query;
+    console.log("query", req.query)
+    
+    interface QueryParams {
+      page?: number;
+      limit?: number;
+      fromDate?: string;
+      toDate?: string;
+    }
 
-    const populateOptions = [
+    const queryParams: QueryParams = {
+      page: page ? parseInt(page as string, 10) : 1, 
+      limit: limit ? parseInt(limit as string, 10) : 10,
+      fromDate: fromDate as string,
+      toDate: toDate as string,
+    };
+
+    const populateOptions: any[] = [
       { path: "users", select: "userName profileImage language" },
       { path: "messages", select: "message sender createdAt voiceNote status" },
     ];
@@ -211,7 +227,38 @@ exports.getUserConversation = catchAsync(
       throw new AppError("This conversation does not exist", 404);
     }
 
-    res.status(200).json({ status: "Success", conversation });
+    
+    let messages: any[] = conversation.messages; 
+
+    
+    if (queryParams.fromDate && queryParams.toDate) {
+      const fromDateObj = new Date(queryParams.fromDate);
+      const toDateObj = new Date(queryParams.toDate);
+      messages = messages.filter((message) => {
+        const messageDate = new Date(message.createdAt);
+        return messageDate >= fromDateObj && messageDate <= toDateObj;
+      });
+    }
+
+    
+    messages.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const startIndex =
+      ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
+    const endIndex = (queryParams.page || 1) * (queryParams.limit || 10);
+
+    const paginatedMessages = messages.slice(startIndex, endIndex);
+
+    res.status(200).json({
+      status: "Success",
+      conversation: {
+        ...conversation.toObject(),
+        messages: paginatedMessages,
+      },
+    });
   }
 );
 
