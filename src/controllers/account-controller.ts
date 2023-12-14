@@ -210,8 +210,8 @@ exports.forgotPassword = catchAsync(
       {
         from: process.env.NODEMAILER_USER, // sender address
         to: email, // list of receivers
-        subject: "reset password url", // Subject line
-        text: `click on the following link to reset Your password: http://127.0.0.1:8000/api/v1/users/reset-password/${resetToken}`,
+        subject: "Talckatoo Reset Password", // Subject line
+        text: `Click the following link to reset your password: http://127.0.0.1:8000/api/v1/users/reset-password/${resetToken}`,
       },
       (err: any) => next(new AppError(err.message, 404))
     );
@@ -228,13 +228,12 @@ exports.resetPassword = catchAsync(
     const { token } = req.params;
     const { password } = req.body;
     const decoded = crypto.createHash("sha256").update(token).digest("hex");
-    console.log(decoded);
     const user = await User.findOne({ passwordResetToken: decoded });
-    console.log(user);
+
     if (!(user.passwordResetTokenExpires > Date.now()))
       next(
         new AppError(
-          "the password reset token has expired please try creating a new one",
+          "The password reset token has expired please try again",
           404
         )
       );
