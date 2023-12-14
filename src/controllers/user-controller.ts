@@ -113,6 +113,8 @@ export const getFriends = async (
 
     let contactedUsers: any[] = [];
     let uncontactedUsers: any[] = [];
+    let latestMessage;
+    let last;
 
     for (const friend of friends.friends) {
       // Check if there's a shared conversation ID
@@ -121,12 +123,28 @@ export const getFriends = async (
           currentUser.conversations.includes(conversationId)
       );
 
+      const populateOptions = {
+        path: "messages",
+        select: "_id createdAt updatedAt message voiceNote",
+      };
+
       // get the conversation object
       const conversation = sharedConversation
-        ? await Conversation.findById(sharedConversation)
+        ? await Conversation.findById(sharedConversation).populate(
+            populateOptions
+          )
         : null;
 
-      console.log("conversation", conversation);
+      if (conversation) {
+        last = conversation.messages.pop();
+      }
+
+      if (last.message) {
+        latestMessage = last.message;
+      } else if (last.voiceNote) {
+        latestMessage = "voiceNote";
+      }
+      console.log("contactedUsers", contactedUsers);
 
       if (sharedConversation) {
         contactedUsers.push({
@@ -135,6 +153,7 @@ export const getFriends = async (
           conversation: conversation,
           profileImage: friend.profileImage,
           language: friend.language,
+          latestMessage: latestMessage ? latestMessage : null,
         });
       } else {
         uncontactedUsers.push({
