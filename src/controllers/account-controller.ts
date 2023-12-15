@@ -8,7 +8,7 @@ const Conversation = require("../models/conversation-model");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-
+const mailConstructor = require("../../utils/mail-constructor");
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
@@ -198,23 +198,7 @@ exports.forgotPassword = catchAsync(
       validateBeforeSave: false,
     });
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.NODEMAILER_USER,
-        pass: process.env.NODEMAILER_PASSWORD,
-      },
-    });
-
-    transporter.sendMail(
-      {
-        from: process.env.NODEMAILER_USER, // sender address
-        to: email, // list of receivers
-        subject: "Talckatoo Reset Password", // Subject line
-        text: `Click the following link to reset your password: http://127.0.0.1:8000/api/v1/users/reset-password/${resetToken}`,
-      },
-      (err: any) => next(new AppError(err.message, 404))
-    );
+    mailConstructor(email, resetToken);
 
     res.status(200).json({
       status: "success",
