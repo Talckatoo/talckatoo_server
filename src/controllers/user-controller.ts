@@ -126,8 +126,6 @@ export const getFriends = async (
         ? await Conversation.findById(sharedConversation)
         : null;
 
-      console.log("conversation", conversation);
-
       if (sharedConversation) {
         contactedUsers.push({
           _id: friend._id,
@@ -198,8 +196,7 @@ exports.getUserConversation = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { conversationId } = req.params;
     const { page, limit, fromDate, toDate } = req.query;
-    console.log("query", req.query)
-    
+
     interface QueryParams {
       page?: number;
       limit?: number;
@@ -208,7 +205,7 @@ exports.getUserConversation = catchAsync(
     }
 
     const queryParams: QueryParams = {
-      page: page ? parseInt(page as string, 10) : 1, 
+      page: page ? parseInt(page as string, 10) : 1,
       limit: limit ? parseInt(limit as string, 10) : 10,
       fromDate: fromDate as string,
       toDate: toDate as string,
@@ -227,10 +224,8 @@ exports.getUserConversation = catchAsync(
       throw new AppError("This conversation does not exist", 404);
     }
 
-    
-    let messages: any[] = conversation.messages; 
+    let messages: any[] = conversation.messages;
 
-    
     if (queryParams.fromDate && queryParams.toDate) {
       const fromDateObj = new Date(queryParams.fromDate);
       const toDateObj = new Date(queryParams.toDate);
@@ -240,7 +235,6 @@ exports.getUserConversation = catchAsync(
       });
     }
 
-    
     messages.sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
