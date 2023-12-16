@@ -8,7 +8,7 @@ const Conversation = require("../models/conversation-model");
 const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
-
+const mailConstructor = require("../../utils/mail-constructor");
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
