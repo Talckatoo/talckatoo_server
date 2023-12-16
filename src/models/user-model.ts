@@ -28,6 +28,8 @@ export interface Iuser {
   friends: Array<String>;
   passwordResetToken: String;
   passwordResetTokenExpires: Date;
+  dateBirth: String;
+  profile?: String;
 }
 
 //user schema
@@ -86,6 +88,14 @@ const UserSchema = new Schema<Iuser>({
   ],
   passwordResetToken: String,
   passwordResetTokenExpires: Date,
+  dateBirth: {
+    type: Date,
+  },
+  profile: {
+    type: Schema.Types.ObjectId,
+    ref: "Profile",
+    required: false,
+  },
 });
 
 UserSchema.pre("save", async function (next) {

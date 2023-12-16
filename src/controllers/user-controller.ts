@@ -113,6 +113,8 @@ export const getFriends = async (
 
     let contactedUsers: any[] = [];
     let uncontactedUsers: any[] = [];
+    let latestMessage;
+    let last;
 
     for (const friend of friends.friends) {
       // Check if there's a shared conversation ID
@@ -121,12 +123,27 @@ export const getFriends = async (
           currentUser.conversations.includes(conversationId)
       );
 
+      const populateOptions = {
+        path: "messages",
+        select: "_id createdAt updatedAt message voiceNote",
+      };
+
       // get the conversation object
       const conversation = sharedConversation
-        ? await Conversation.findById(sharedConversation)
+        ? await Conversation.findById(sharedConversation).populate(
+            populateOptions
+          )
         : null;
 
-      console.log("conversation", conversation);
+      if (conversation) {
+        last = conversation.messages.pop();
+      }
+
+      if (last.message) {
+        latestMessage = last.message;
+      } else if (last.voiceNote) {
+        latestMessage = "voiceNote";
+      }
 
       if (sharedConversation) {
         contactedUsers.push({
@@ -135,6 +152,7 @@ export const getFriends = async (
           conversation: conversation,
           profileImage: friend.profileImage,
           language: friend.language,
+          latestMessage: latestMessage ? latestMessage : null,
         });
       } else {
         uncontactedUsers.push({
@@ -197,8 +215,23 @@ exports.getUserConversations = catchAsync(
 exports.getUserConversation = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { conversationId } = req.params;
+    const { page, limit, fromDate, toDate } = req.query;
 
-    const populateOptions = [
+    interface QueryParams {
+      page?: number;
+      limit?: number;
+      fromDate?: string;
+      toDate?: string;
+    }
+
+    const queryParams: QueryParams = {
+      page: page ? parseInt(page as string, 10) : 1,
+      limit: limit ? parseInt(limit as string, 10) : 10,
+      fromDate: fromDate as string,
+      toDate: toDate as string,
+    };
+
+    const populateOptions: any[] = [
       { path: "users", select: "userName profileImage language" },
       { path: "messages", select: "message sender createdAt voiceNote status" },
     ];
@@ -211,7 +244,35 @@ exports.getUserConversation = catchAsync(
       throw new AppError("This conversation does not exist", 404);
     }
 
-    res.status(200).json({ status: "Success", conversation });
+    let messages: any[] = conversation.messages;
+
+    if (queryParams.fromDate && queryParams.toDate) {
+      const fromDateObj = new Date(queryParams.fromDate);
+      const toDateObj = new Date(queryParams.toDate);
+      messages = messages.filter((message) => {
+        const messageDate = new Date(message.createdAt);
+        return messageDate >= fromDateObj && messageDate <= toDateObj;
+      });
+    }
+
+    messages.sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+
+    const startIndex =
+      ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
+    const endIndex = (queryParams.page || 1) * (queryParams.limit || 10);
+
+    const paginatedMessages = messages.slice(startIndex, endIndex);
+
+    res.status(200).json({
+      status: "Success",
+      conversation: {
+        ...conversation.toObject(),
+        messages: paginatedMessages,
+      },
+    });
   }
 );
 
@@ -234,7 +295,6 @@ exports.updateProfile = catchAsync(
             folder: "profile",
             secure: true,
           });
-          console.log(result);
         } else {
           return next(
             new AppError(

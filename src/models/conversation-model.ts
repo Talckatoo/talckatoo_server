@@ -6,6 +6,7 @@ interface Iconversation {
   messages: Array<String>;
   users: Array<String>;
   unread: Array<String>;
+  // latestMessage: String;
 }
 
 // conversation schema
@@ -28,6 +29,9 @@ const conversationSchema = new Schema<Iconversation>(
         type: String, // recipientID
       },
     ],
+    // latestMessage: {
+    //   type: String,
+    // },
   },
   { timestamps: true }
 );
