@@ -211,7 +211,7 @@ exports.forgotPassword = catchAsync(
         from: process.env.NODEMAILER_USER, // sender address
         to: email, // list of receivers
         subject: "Talckatoo Reset Password", // Subject line
-        text: `Click the following link to reset your password: http://127.0.0.1:8000/api/v1/users/reset-password/${resetToken}`,
+        text: `Click the following link to reset your password: ${process.env.PUBLIC_URL}/reset-password/${resetToken}`,
       },
       (err: any) => next(new AppError(err.message, 404))
     );
@@ -229,6 +229,8 @@ exports.resetPassword = catchAsync(
     const { password } = req.body;
     const decoded = crypto.createHash("sha256").update(token).digest("hex");
     const user = await User.findOne({ passwordResetToken: decoded });
+
+    if (!user) next(new AppError("no user found with this token", 404));
 
     if (!(user.passwordResetTokenExpires > Date.now()))
       next(

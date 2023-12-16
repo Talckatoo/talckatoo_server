@@ -29,7 +29,7 @@ export interface Iuser {
   passwordResetToken: String;
   passwordResetTokenExpires: Date;
   dateBirth: String;
-  profile: String;
+  profile?: String;
 }
 
 //user schema
@@ -94,7 +94,7 @@ const UserSchema = new Schema<Iuser>({
   profile: {
     type: Schema.Types.ObjectId,
     ref: "Profile",
-    required: true,
+    required: false,
   },
 });
 
