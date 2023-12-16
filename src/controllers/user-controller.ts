@@ -144,7 +144,6 @@ export const getFriends = async (
       } else if (last.voiceNote) {
         latestMessage = "voiceNote";
       }
-      console.log("contactedUsers", contactedUsers);
 
       if (sharedConversation) {
         contactedUsers.push({
@@ -296,7 +295,6 @@ exports.updateProfile = catchAsync(
             folder: "profile",
             secure: true,
           });
-          console.log(result);
         } else {
           return next(
             new AppError(

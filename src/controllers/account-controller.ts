@@ -193,7 +193,7 @@ exports.forgotPassword = catchAsync(
     if (!user) next(new AppError("no user found with this email address", 404));
 
     const resetToken = user.createPasswordResetToken();
-    console.log(resetToken);
+
     await user.save({
       validateBeforeSave: false,
     });
