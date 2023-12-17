@@ -1,3 +1,4 @@
+import { AnyARecord } from "dns";
 import { Request, Response, NextFunction } from "express";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
@@ -5,7 +6,9 @@ const passport = require("../../utils/passport-config");
 const AppError = require("../../utils/custom-error");
 const Conversation = require("../models/conversation-model");
 const axios = require("axios");
-
+const nodemailer = require("nodemailer");
+const crypto = require("crypto");
+const mailConstructor = require("../../utils/mail-constructor");
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
@@ -21,7 +24,7 @@ exports.signUp = catchAsync(
       process.env.NEW_API_URL,
       {
         text: "welcome",
-        target_lang: language.toUpperCase(),
+        target_lang: language?.toUpperCase(),
       },
       {
         headers: {
@@ -180,3 +183,76 @@ export const loginWithPhoneNumber = async (
     next(error);
   }
 };
+
+exports.forgotPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    if (!email) next(new AppError("please specify your email address", 404));
+    const user = await User.findOne({ email });
+
+    if (!user) next(new AppError("no user found with this email address", 404));
+
+    const resetToken = user.createPasswordResetToken();
+
+    await user.save({
+      validateBeforeSave: false,
+    });
+
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+
+    transporter.sendMail(
+      {
+        from: process.env.NODEMAILER_USER, // sender address
+        to: email, // list of receivers
+        subject: "Talckatoo Reset Password", // Subject line
+        text: `Click the following link to reset your password: ${process.env.PUBLIC_URL}/reset-password/${resetToken}`,
+      },
+      (err: any) => next(new AppError(err.message, 404))
+    );
+
+    res.status(200).json({
+      status: "success",
+      message: "reset url sent to your email",
+    });
+  }
+);
+
+exports.resetPassword = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { token } = req.params;
+    const { password } = req.body;
+    const decoded = crypto.createHash("sha256").update(token).digest("hex");
+    const user = await User.findOne({ passwordResetToken: decoded });
+
+    if (!user) next(new AppError("no user found with this token", 404));
+
+    if (!(user.passwordResetTokenExpires > Date.now()))
+      next(
+        new AppError(
+          "The password reset token has expired please try again",
+          404
+        )
+      );
+
+    user.password = password;
+    user.passwordResetTokenExpires = undefined;
+    user.passwordResetToken = undefined;
+    user.passwordChangedAt = Date.now() - 1000;
+    await user.save();
+
+    const jwtToken = user.createJWT();
+
+    res.status(200).json({
+      msg: "User successfully authenticated",
+      success: "login",
+      token: token,
+      user,
+    });
+  }
+);
