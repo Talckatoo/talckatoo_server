@@ -129,7 +129,7 @@ export const getFriends = async (
       };
 
       // get the conversation object
-      const conversation = sharedConversation
+      let conversation = sharedConversation
         ? await Conversation.findById(sharedConversation).populate(
             populateOptions
           )
@@ -144,6 +144,14 @@ export const getFriends = async (
       } else if (last.voiceNote) {
         latestMessage = "voiceNote";
       }
+
+      conversation = {
+        _id: conversation?._id,
+        createdAt: conversation?.createdAt,
+        updatedAt: conversation?.updatedAt,
+        unread: conversation?.unread,
+        users: conversation?.users,
+      };
 
       if (sharedConversation) {
         contactedUsers.push({
