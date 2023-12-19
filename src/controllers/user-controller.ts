@@ -263,17 +263,8 @@ exports.getUserConversation = catchAsync(
       });
     }
 
-    messages.sort((a, b) => {
-      if (a.createdAt.getTime() < b.createdAt.getTime()) {
-        return -1;
-      }
-
-      if (a.createdAt.getTime() > b.createdAt.getTime()) {
-        return 1;
-      }
-
-      return 0;
-    });
+    // reverse the messages array so that the latest messages are at the top
+    messages.reverse();
 
     const startIndex =
       ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
