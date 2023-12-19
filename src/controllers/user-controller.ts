@@ -263,6 +263,18 @@ exports.getUserConversation = catchAsync(
       });
     }
 
+    messages.sort((a, b) => {
+      if (a.createdAt.getTime() < b.createdAt.getTime()) {
+        return -1;
+      }
+
+      if (a.createdAt.getTime() > b.createdAt.getTime()) {
+        return 1;
+      }
+
+      return 0;
+    });
+
     const startIndex =
       ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
     const endIndex = (queryParams.page || 1) * (queryParams.limit || 10);
