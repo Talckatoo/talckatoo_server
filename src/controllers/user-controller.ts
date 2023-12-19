@@ -267,7 +267,7 @@ exports.getUserConversation = catchAsync(
       ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
     const endIndex = (queryParams.page || 1) * (queryParams.limit || 10);
 
-    const paginatedMessages = messages;
+    const paginatedMessages = messages.slice(startIndex, endIndex);
 
     res.status(200).json({
       status: "Success",
