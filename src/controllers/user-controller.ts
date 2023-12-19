@@ -263,11 +263,6 @@ exports.getUserConversation = catchAsync(
       });
     }
 
-    messages.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
-
     const startIndex =
       ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
     const endIndex = (queryParams.page || 1) * (queryParams.limit || 10);
