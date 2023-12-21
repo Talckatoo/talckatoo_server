@@ -129,7 +129,7 @@ export const getFriends = async (
       };
 
       // get the conversation object
-      const conversation = sharedConversation
+      let conversation = sharedConversation
         ? await Conversation.findById(sharedConversation).populate(
             populateOptions
           )
@@ -144,6 +144,14 @@ export const getFriends = async (
       } else if (last.voiceNote) {
         latestMessage = "voiceNote";
       }
+
+      conversation = {
+        _id: conversation?._id,
+        createdAt: conversation?.createdAt,
+        updatedAt: conversation?.updatedAt,
+        unread: conversation?.unread,
+        users: conversation?.users,
+      };
 
       if (sharedConversation) {
         contactedUsers.push({
@@ -255,16 +263,14 @@ exports.getUserConversation = catchAsync(
       });
     }
 
-    messages.sort(
-      (a, b) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    );
+    // reverse the messages array so that the latest messages are at the top
+    messages.reverse();
 
     const startIndex =
       ((queryParams.page || 1) - 1) * (queryParams.limit || 10);
     const endIndex = (queryParams.page || 1) * (queryParams.limit || 10);
 
-    const paginatedMessages = messages.slice(startIndex, endIndex);
+    const paginatedMessages = messages.slice(startIndex, endIndex).reverse();
 
     res.status(200).json({
       status: "Success",
