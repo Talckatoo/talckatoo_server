@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 
 import { Socket } from "socket.io";
+import { isPromise } from "util/types";
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -105,6 +106,7 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("isTyping", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);
+    console.log(data);
     if (sendUserSocket) {
       io.to(sendUserSocket).emit("isTyping", data);
     }
@@ -180,11 +182,15 @@ io.on("connection", (socket: Socket) => {
     );
   });
 
-  socket.on("updateProfile", async (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    if (sendUserSocket) {
-      io.to(sendUserSocket).emit("getUpdateProfile", data);
+  socket.on("updateProfile", (data: any) => {
+    console.log(data);
+    const onlineFriends = data.onlineFriends;
+    for (let i = 0; i < onlineFriends.length; i++) {
+      console.log(onlineFriends[i]._id);
+      let socketUserId = onlineUsers.get(onlineFriends[i]._id);
+      io.to(socketUserId).emit("getUpdateProfile", data);
     }
+    // socket.broadcast.emit("getUpdateProfile", data);
   });
 
   socket.on("disconnect", () => {
