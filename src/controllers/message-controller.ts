@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from "express";
+import getTranslation from "../../utils/translator-api";
 const AppError = require("../../utils/custom-error");
 const User = require("../models/user-model");
 const Conversation = require("../models/conversation-model");
@@ -83,30 +84,12 @@ exports.createMessage = catchAsync(
       throw new AppError("You can't send a message to yourself", 403);
     }
 
-    const response = await axios.post(
-      process.env.NEW_API_URL,
-      {
-        text,
-        target_lang: target.toUpperCase(),
-      },
-      {
-        headers: {
-          Authorization: `DeepL-Auth-Key ${process.env.AUTH_KEY}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
+    const response: any = await getTranslation(
+      target,
+      text,
+      process.env.AZURE_TRANSLATOR_KEY
     );
-
-    let translate: string;
-
-    if (
-      response.data.translations[0].detected_source_language === "EN" &&
-      target === "en"
-    ) {
-      translate = "";
-    } else {
-      translate = `\n${response.data.translations[0].text}`;
-    }
+    const translate = response[0]?.text;
 
     if (!voiceToVoice) {
       const message = await Message.create({

@@ -10,6 +10,7 @@ const cloudinary = require("../../utils/cloudinary");
 const axios = require("axios");
 import { ObjectId } from "mongoose";
 import mongoose from "mongoose";
+import getTranslation from "../../utils/translator-api";
 
 exports.getUsers = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -322,21 +323,12 @@ exports.updateProfile = catchAsync(
 
       if (userName) updateObj.userName = userName[0];
       if (language) {
-        const response = await axios.post(
-          process.env.NEW_API_URL,
-          {
-            text: "welcome",
-            target_lang: language[0].toUpperCase(),
-          },
-          {
-            headers: {
-              Authorization: `DeepL-Auth-Key ${process.env.AUTH_KEY}`,
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-          }
+        const response: any = await getTranslation(
+          language[0],
+          "welcome",
+          process.env.AZURE_TRANSLATOR_KEY
         );
-
-        const welcome = response.data.translations[0].text;
+        const welcome = response[0]?.text;
         updateObj.language = language[0];
         updateObj.welcome = welcome;
       }
