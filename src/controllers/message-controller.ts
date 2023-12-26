@@ -87,7 +87,8 @@ exports.createMessage = catchAsync(
     const response: any = await getTranslation(
       target,
       text,
-      process.env.AZURE_TRANSLATOR_KEY
+      process.env.AZURE_TRANSLATOR_KEY,
+      process.env.TRANSLATOR_ENDPOINT
     );
     const translate = response[0]?.text;
 

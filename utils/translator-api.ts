@@ -1,15 +1,14 @@
 const axios = require("axios").default;
 const { v4: uuidv4 } = require("uuid");
 
-const endpoint = "https://api.cognitive.microsofttranslator.com";
-
 // location, also known as region.
 // required if you're using a multi-service or regional (not global) resource. It can be found in the Azure portal on the Keys and Endpoint page.
 const location = "eastus";
 const getTranslation = async (
   targetLanguages: any,
   text: string,
-  key: String | undefined
+  key: String | undefined,
+  endpoint: String | undefined
 ) => {
   try {
     const response = await axios.post(

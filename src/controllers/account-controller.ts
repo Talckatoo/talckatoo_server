@@ -24,7 +24,8 @@ exports.signUp = catchAsync(
     const response: any = await getTranslation(
       language,
       "welcome",
-      process.env.AZURE_TRANSLATOR_KEY
+      process.env.AZURE_TRANSLATOR_KEY,
+      process.env.TRANSLATOR_ENDPOINT
     );
     const welcome = response[0]?.text;
 

@@ -326,7 +326,8 @@ exports.updateProfile = catchAsync(
         const response: any = await getTranslation(
           language[0],
           "welcome",
-          process.env.AZURE_TRANSLATOR_KEY
+          process.env.AZURE_TRANSLATOR_KEY,
+          process.env.TRANSLATOR_ENDPOINT
         );
         const welcome = response[0]?.text;
         updateObj.language = language[0];
