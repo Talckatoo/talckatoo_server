@@ -90,7 +90,7 @@ exports.createMessage = catchAsync(
       process.env.AZURE_TRANSLATOR_KEY,
       process.env.TRANSLATOR_ENDPOINT
     );
-    const translate = response[0]?.text;
+    const translate = `\n${response[0]?.text}`;
 
     if (!voiceToVoice) {
       const message = await Message.create({
