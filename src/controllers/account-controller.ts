@@ -1,5 +1,6 @@
 import { AnyARecord } from "dns";
 import { Request, Response, NextFunction } from "express";
+import getTranslation from "../../utils/translator-api";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
 const passport = require("../../utils/passport-config");
@@ -20,21 +21,13 @@ exports.signUp = catchAsync(
       );
     }
 
-    const response = await axios.post(
-      process.env.NEW_API_URL,
-      {
-        text: "welcome",
-        target_lang: language?.toUpperCase(),
-      },
-      {
-        headers: {
-          Authorization: `DeepL-Auth-Key ${process.env.AUTH_KEY}`,
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      }
+    const response: any = await getTranslation(
+      language,
+      "welcome",
+      process.env.AZURE_TRANSLATOR_KEY,
+      process.env.TRANSLATOR_ENDPOINT
     );
-
-    const welcome = response.data.translations[0].text;
+    const welcome = response[0]?.text;
 
     const user = await User.create({
       userName,
@@ -43,6 +36,7 @@ exports.signUp = catchAsync(
       language,
       welcome,
     });
+
     const userId = user._id;
 
     const aiId = process.env.AI_ASSISTANT_ID;
