@@ -118,6 +118,7 @@ export const getFriends = async (
 
     for (const friend of friends.friends) {
       // Check if there's a shared conversation ID
+
       const sharedConversation = friend.conversations.find(
         (conversationId: any) =>
           currentUser.conversations.includes(conversationId)
@@ -137,12 +138,12 @@ export const getFriends = async (
 
       if (conversation) {
         last = conversation.messages.pop();
-      }
 
-      if (last.message) {
-        latestMessage = last.message;
-      } else if (last.voiceNote) {
-        latestMessage = "voiceNote";
+        if (last.message && last) {
+          latestMessage = last.message;
+        } else if (last.voiceNote) {
+          latestMessage = "voiceNote";
+        }
       }
 
       conversation = {
