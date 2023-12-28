@@ -18,8 +18,12 @@ const catchAsync = require("./utils/catch-async");
 app.use(express.json());
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
+import uploadRouter from "./src/routes/upload-router";
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 const port: number = Number(process.env.PORT) || 8000;
+import multer from 'multer';
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 // middleware
 // app.use(cors({ origin: true }));
@@ -51,6 +55,7 @@ app.use(express.static("public"));
 app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use(passport.initialize());
 app.use(passport.session());
+app.use(upload.single('file'));
 
 // routes
 
@@ -87,6 +92,11 @@ app.use(
   "/api/v1/",
   passport.authenticate(["jwt"], { session: true }),
   mainRouter
+);
+app.use(
+  "/api/v1",
+  passport.authenticate(["jwt"], { session: true }),
+  uploadRouter
 );
 
 app.use(
