@@ -27,7 +27,6 @@ const getTranslation = async (
         },
         params: {
           "api-version": "3.0",
-          from: "en",
           to: targetLanguages,
         },
         responseType: "json",

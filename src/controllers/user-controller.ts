@@ -8,8 +8,6 @@ const catchAsync = require("../../utils/catch-async");
 const AppError = require("../../utils/custom-error");
 const cloudinary = require("../../utils/cloudinary");
 const axios = require("axios");
-import { ObjectId } from "mongoose";
-import mongoose from "mongoose";
 import getTranslation from "../../utils/translator-api";
 
 exports.getUsers = catchAsync(
@@ -288,63 +286,36 @@ exports.updateProfile = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.params;
 
-    const form = new multiparty.Form();
+    const { userName, fileUrl, language } = req.body;
 
-    form.parse(req, async function (err: any, fields: any, files: any) {
-      let result: any;
+    let updateObj: any = {
+      profileImage: { public_id: fileUrl, url: fileUrl },
+    };
 
-      if (files.image) {
-        if (
-          files.image[0].originalFilename.substr(-4, 4) == ".png" ||
-          files.image[0].originalFilename.substr(-4, 4) == ".jpg" ||
-          files.image[0].originalFilename.substr(-4, 4) == "jpeg"
-        ) {
-          result = await cloudinary.uploader.upload(files.image[0].path, {
-            folder: "profile",
-            secure: true,
-          });
-        } else {
-          return next(
-            new AppError(
-              "the only image format accepted are .jpg, .png and .jpeg",
-              422
-            )
-          );
-        }
-      }
+    if (!updateObj.profileImage.public_id) updateObj = {};
 
-      const { userName, public_id, language } = fields;
+    if (userName) updateObj.userName = userName;
+    if (language) {
+      const response: any = await getTranslation(
+        language,
+        "welcome",
+        process.env.AZURE_TRANSLATOR_KEY,
+        process.env.TRANSLATOR_ENDPOINT
+      );
+      const welcome = response[0]?.text;
+      updateObj.language = language;
+      updateObj.welcome = welcome;
+    }
+    const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
+      new: true,
+    });
+    if (!user) {
+      return next(new AppError("No user found with the provided Id", 404));
+    }
 
-      if (public_id) cloudinary.uploader.destroy(public_id[0]);
-
-      let updateObj: any = {
-        profileImage: { public_id: result?.public_id, url: result?.secure_url },
-      };
-      if (!updateObj.profileImage.public_id) updateObj = {};
-
-      if (userName) updateObj.userName = userName[0];
-      if (language) {
-        const response: any = await getTranslation(
-          language[0],
-          "welcome",
-          process.env.AZURE_TRANSLATOR_KEY,
-          process.env.TRANSLATOR_ENDPOINT
-        );
-        const welcome = response[0]?.text;
-        updateObj.language = language[0];
-        updateObj.welcome = welcome;
-      }
-      const user = await User.findOneAndUpdate({ _id: userId }, updateObj, {
-        new: true,
-      });
-      if (!user) {
-        return next(new AppError("No user found with the provided Id", 404));
-      }
-
-      res.status(200).json({
-        success: "true",
-        user,
-      });
+    res.status(200).json({
+      success: "true",
+      user,
     });
   }
 );
