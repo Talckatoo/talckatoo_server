@@ -64,7 +64,6 @@ exports.signUp = catchAsync(
 exports.logIn = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
-    console.log("login");
     if (!email || !password) {
       throw new AppError(
         "Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.",

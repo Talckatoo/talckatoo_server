@@ -8,13 +8,13 @@ interface Imedia {
   altText: String;
 }
 
-export type MediaType = "pdf" | "image" | "audio";
+export type MediaType = "pdf" | "image" | "audio" | "video";
 
 const mediaSchema = new Schema<Imedia>(
   {
     type: {
       type: String,
-      enum: ["pdf", "image", "audio"],
+      enum: ["pdf", "image", "audio", "video"],
     },
     url: {
       type: String,
@@ -28,5 +28,4 @@ const mediaSchema = new Schema<Imedia>(
 
 const Media = model<Imedia>("Media", mediaSchema);
 
-export {};
-module.exports = Media;
+export default Media;
