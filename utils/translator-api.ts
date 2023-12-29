@@ -27,12 +27,12 @@ const getTranslation = async (
         },
         params: {
           "api-version": "3.0",
-          from: "en",
           to: targetLanguages,
         },
         responseType: "json",
       }
     );
+    console.log(response);
     return response?.data[0]?.translations;
   } catch (error: any) {
     console.error("Translation error:", error.message);

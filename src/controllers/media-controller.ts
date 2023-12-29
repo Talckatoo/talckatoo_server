@@ -12,8 +12,6 @@ export const uploadMedia = catchAsync(
     try {
       const { type, altText } = req.body;
 
-      console.log(req.file);
-
       if (!type || !req.file) {
         throw new Error("Please provide all the required fields");
       }

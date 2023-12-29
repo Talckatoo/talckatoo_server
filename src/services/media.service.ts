@@ -31,9 +31,6 @@ export const uploadMediaService = async (
       url: uploadResult.Location,
       altText,
     });
-
-    console.log("media", media);
-
     return media;
   } catch (error) {
     console.log(error);
