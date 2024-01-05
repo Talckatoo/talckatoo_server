@@ -47,6 +47,7 @@ const io = socket(server, {
 //const onlineUsers: Map<string, string> = new Map;
 //const onlineUsers = new Map<string, string>();
 //const onlineUsers: Map<string, string> = new Map<string, string>();
+
 const onlineUsers = new Map();
 
 io.on("connection", (socket: Socket) => {
@@ -200,4 +201,23 @@ io.on("connection", (socket: Socket) => {
     }
     io.emit("getUsers", Array.from(onlineUsers));
   });
+
+  // setting up video call
+  // 1. Get logged in user ID: pass the userID in socket and get it from onlineUsers
+
+  socket.on("callUser", (data: any) => {
+    const { userToCall, signalData, from, username } = data;
+    const sendUserSocket = onlineUsers.get(userToCall);
+    console.log(sendUserSocket);
+    io.to(sendUserSocket).emit("callUser", {
+      signal: signalData,
+      from,
+      username,
+    });
+  });
+
+  socket.on("answerCall", (data) => {
+    io.to(data.to).emit("callAccepted", data.signal);
+  });
+  console.log(onlineUsers);
 });
