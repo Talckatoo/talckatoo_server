@@ -3,18 +3,16 @@ import { Schema, model } from "mongoose";
 
 // message Interface
 interface Imedia {
-  type: MediaType;
+  type: string;
   url: String;
   altText: String;
 }
-
-export type MediaType = "pdf" | "image" | "audio" | "video";
 
 const mediaSchema = new Schema<Imedia>(
   {
     type: {
       type: String,
-      enum: ["pdf", "image", "audio", "video"],
+      required: [true, "type is required"],
     },
     url: {
       type: String,
