@@ -32,6 +32,7 @@ const listener = async () => {
   });
   console.log("connected to server");
 };
+
 const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
 
@@ -207,6 +208,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("callUser", (data: any) => {
     const { userToCall, signalData, from, username } = data;
     const sendUserSocket = onlineUsers.get(userToCall);
+    console.log(sendUserSocket);
     io.to(sendUserSocket).emit("callUser", {
       signal: signalData,
       from,
@@ -217,4 +219,5 @@ io.on("connection", (socket: Socket) => {
   socket.on("answerCall", (data) => {
     io.to(data.to).emit("callAccepted", data.signal);
   });
+  console.log(onlineUsers);
 });
