@@ -218,4 +218,5 @@ io.on("connection", (socket: Socket) => {
     const sendUserSocket = onlineUsers.get(data.to);
     io.to(sendUserSocket).emit("callAccepted", data.signal);
   });
+  console.log(onlineUsers);
 });
