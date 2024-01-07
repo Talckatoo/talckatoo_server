@@ -207,6 +207,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("callUser", (data: any) => {
     const { userToCall, signalData, from, username } = data;
     const sendUserSocket = onlineUsers.get(userToCall);
+    console.log(sendUserSocket);
     io.to(sendUserSocket).emit("callUser", {
       signal: signalData,
       from,
