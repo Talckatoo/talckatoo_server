@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
-import { Request, Response, NextFunction } from "express";
-import { loginWithPhoneNumber } from "../controllers/account-controller";
+import { loginWithPhoneNumber} from "../controllers/account-controller";
 
 const {
   signUp,
@@ -9,6 +8,8 @@ const {
   logOut,
   forgotPassword,
   resetPassword,
+  loginWithGoogle,
+  googleCallback,
 } = require("../controllers/account-controller");
 /**
  * @swagger
@@ -97,6 +98,8 @@ router.route("/loginWithPhone").post(loginWithPhoneNumber);
 
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password/:token").post(resetPassword);
+router.route("/loginWithGoogle").get(loginWithGoogle);
+router.route("/googleCallback").get(googleCallback);
 
 export {};
 module.exports = router;

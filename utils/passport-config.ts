@@ -1,5 +1,6 @@
 const passport = require("passport");
 const dotenv = require("dotenv");
+const GoogleStrategy = require("passport-google-oauth20").Strategy;
 dotenv.config();
 const User = require("../src/models/user-model");
 
@@ -9,27 +10,6 @@ import {
   StrategyOptions,
   VerifiedCallback,
 } from "passport-jwt";
-
-// import { VerifyCallback } from "passport-google-oauth20";
-
-// const GoogleOauthStrategy = require("passport-google-oauth20").Strategy;
-
-passport.serializeUser((user: any, done: any) => {
-  return done(null, user.userId);
-});
-
-passport.deserializeUser(async (id: any, done: any) => {
-  try {
-    const user = await User.findOne({ _id: id });
-    if (user) {
-      return done(null, user);
-    } else {
-      return done(null, false);
-    }
-  } catch (err: any) {
-    return done(err, false);
-  }
-});
 
 const jwtOptions: StrategyOptions = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
@@ -55,46 +35,56 @@ passport.use(
   )
 );
 
-// const googleOptions = {
-//   clientID: process.env.GOOGLE_CLIENT_ID,
-//   clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-//   callbackURL: process.env.CALLBACK_URL,
-//   scope: ["profile", "email"],
-// };
+passport.use(
+  new GoogleStrategy(
+    {
+      clientID: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    },
+    async (_accessToken: any, _refreshToken: any, profile: { id: any; displayName: any; emails: { value: any; }[]; }, done: (arg0: unknown, arg1: null) => any) => {
+      try {
+        // Check if user already exists in the database
+        const existingUser = await User.findOne({ googleId: profile.id });
 
-// passport.use(
-//   new GoogleOauthStrategy(
-//     googleOptions,
-//     async (
-//       _accessToken: any,
-//       _refreshToken: any,
-//       profile: any,
-//       done: VerifyCallback
-//     ) => {
-//       try {
-//         let user = await User.findOne({
-//           googleId: profile.id,
-//         });
+        if (existingUser) {
+          return done(null, existingUser);
+        }
 
-//         if (!user) {
-//           user = await User.create({
-//             googleId: profile.id,
-//             userName: profile.displayName,
-//             email: profile.emails[0]?.value,
-//           });
-//         }
+        // Create a new user with Google profile information
+        const newUser = await User.create({
+          userName: profile.displayName,
+          email: profile.emails[0].value,
+          googleId: profile.id,
+          // Add other necessary fields as needed
+        });
 
-//         if (user) {
-//           return done(null, user);
-//         } else {
-//           return done(null, false);
-//         }
-//       } catch (err: any) {
-//         return done(err, false);
-//       }
-//     }
-//   )
-// );
+        return done(null, newUser);
+      } catch (error) {
+        return done(error, null);
+      }
+    }
+  )
+);
 
-export {};
+passport.serializeUser((user: any, done: any) => {
+  return done(null, user.userId);
+});
+
+
+passport.deserializeUser(async (id: any, done: any) => {
+  try {
+    const user = await User.findOne({ _id: id });
+    if (user) {
+      return done(null, user);
+    } else {
+      return done(null, false);
+    }
+  } catch (err: any) {
+    return done(err, false);
+  }
+});
+
+module.exports = passport;
+export { };
 module.exports = passport;
