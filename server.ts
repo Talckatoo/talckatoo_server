@@ -207,7 +207,6 @@ io.on("connection", (socket: Socket) => {
   socket.on("callUser", (data: any) => {
     const { userToCall, signalData, from, username } = data;
     const sendUserSocket = onlineUsers.get(userToCall);
-    console.log(sendUserSocket);
     io.to(sendUserSocket).emit("callUser", {
       signal: signalData,
       from,
@@ -218,6 +217,15 @@ io.on("connection", (socket: Socket) => {
   socket.on("answerCall", (data) => {
     const sendUserSocket = onlineUsers.get(data.to);
     io.to(sendUserSocket).emit("callAccepted", data.signal);
+  });
+
+  socket.on("leaveCall", (data) => {
+    const { userToCall } = data;
+    console.log(userToCall);
+
+    const sendUserSocket = onlineUsers.get(userToCall);
+    console.log(sendUserSocket);
+    io.to(sendUserSocket).emit("leaveCall", data);
   });
   console.log(onlineUsers);
 });
