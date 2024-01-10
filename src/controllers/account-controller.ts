@@ -248,7 +248,15 @@ exports.loginWithGoogle = (req: Request, res: Response, next: NextFunction) => {
 
 // Callback after Google has authenticated the user
 exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
-  passport.authenticate("google", {
-    failureRedirect: "/login", // Redirect to login page on failure
+  // generate a token on succes 
+  passport.authenticate("google", { session: false }, (err: any, user: any) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return next(new AppError("Authentication failed", 400));
+    }
+    const token = user.createJWT();
+    res.status(200).json({ token, user });
   })(req, res, next);
-};
+}
