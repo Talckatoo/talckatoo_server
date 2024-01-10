@@ -202,15 +202,38 @@ io.on("connection", (socket: Socket) => {
   });
 
   // setting up video call
+
   // 1. Get logged in user ID: pass the userID in socket and get it from onlineUsers
 
   socket.on("callUser", (data: any) => {
-    const { userToCall, signalData, from, username } = data;
+    const { userToCall, signalData, from, username, roomId } = data;
+    console.log(roomId);
+    // getting a room from the socket adapter
+    const { rooms } = io.sockets.adapter;
+    const room = rooms.get(roomId);
+    // Scenario 1 when there's no one in the room
+    if (room === undefined) {
+      socket.join(roomId);
+      socket.emit("room-created");
+    }
+    // Scenario 2 when 1 person is in the room
+    else if (room.size == 1) {
+      socket.join(roomId);
+      socket.emit("join");
+    }
+    // Scenario 3 when there already 2 users in the room
+    else {
+      socket.emit("full");
+    }
+    console.log(rooms);
+
     const sendUserSocket = onlineUsers.get(userToCall);
     io.to(sendUserSocket).emit("callUser", {
       signal: signalData,
       from,
       username,
+      roomId,
+      userToCall,
     });
   });
 
@@ -227,5 +250,28 @@ io.on("connection", (socket: Socket) => {
     console.log(sendUserSocket);
     io.to(sendUserSocket).emit("leaveCall", data);
   });
-  console.log(onlineUsers);
+
+  // 2. Create a room for video call
+  socket.on("join", (roomId) => {
+    // getting a room from the socket adapter
+    const { rooms } = io.sockets.adapter;
+    const room = rooms.get(roomId);
+    // Scenario 1 when there's no one in the room
+    if (room === undefined) {
+      socket.join(roomId);
+      socket.emit("creates");
+    }
+    // Scenario 2 when 1 person is in the room
+    else if (room.size == 1) {
+      socket.join(roomId);
+      socket.emit("joined");
+    }
+    // Scenario 3 when there already 2 users in the room
+    else {
+      socket.emit("full");
+    }
+    console.log(rooms);
+  });
 });
+
+
