@@ -108,5 +108,5 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 app.use(globalErrorHandler);
-export {};
+export { };
 module.exports = app;

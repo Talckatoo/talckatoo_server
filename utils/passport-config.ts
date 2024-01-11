@@ -56,7 +56,9 @@ passport.use(
           userName: profile.displayName,
           email: profile.emails[0].value,
           googleId: profile.id,
-          // Add other necessary fields as needed
+          language: "en",
+          welcome: "hello",
+          profileImage: (profile as any).picture, 
         });
 
         return done(null, newUser);
@@ -85,6 +87,5 @@ passport.deserializeUser(async (id: any, done: any) => {
   }
 });
 
-module.exports = passport;
 export { };
 module.exports = passport;
