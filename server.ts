@@ -207,25 +207,17 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("callUser", (data: any) => {
     const { userToCall, signalData, from, username, roomId } = data;
-    console.log(roomId);
     // getting a room from the socket adapter
-    const { rooms } = io.sockets.adapter;
-    const room = rooms.get(roomId);
-    // Scenario 1 when there's no one in the room
-    if (room === undefined) {
-      socket.join(roomId);
-      socket.emit("room-created");
-    }
-    // Scenario 2 when 1 person is in the room
-    else if (room.size == 1) {
-      socket.join(roomId);
-      socket.emit("join");
-    }
-    // Scenario 3 when there already 2 users in the room
-    else {
-      socket.emit("full");
-    }
-    console.log(rooms);
+    // const { rooms } = io.sockets.adapter;
+    // const room = rooms.get(roomId);
+
+    socket.join(roomId);
+
+    // Emit to the current socket
+    // socket.emit('roomCreated', { message: 'Room created!' });
+  
+    // Emit to all sockets in the room
+    io.to(roomId).emit('roomCreated', { message: 'Room created!' });
 
     const sendUserSocket = onlineUsers.get(userToCall);
     io.to(sendUserSocket).emit("callUser", {
@@ -238,15 +230,20 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    io.to(sendUserSocket).emit("callAccepted", data.signal);
+    const sendUserSocket = onlineUsers.get(data.call.from);
+    const {roomId} = data.call
+    socket.join(roomId);
+    io.to(roomId).emit('callAccepted', data.signal);
+
+      // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
+  
+    // io.to(sendUserSocket).emit("callAccepted", data.signal);
   });
 
   socket.on("leaveCall", (data) => {
     const { userToCall } = data;
-    console.log(userToCall);
-
     const sendUserSocket = onlineUsers.get(userToCall);
+
     console.log(sendUserSocket);
     io.to(sendUserSocket).emit("leaveCall", data);
   });
@@ -270,7 +267,7 @@ io.on("connection", (socket: Socket) => {
     else {
       socket.emit("full");
     }
-    console.log(rooms);
+
   });
 });
 
