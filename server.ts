@@ -15,6 +15,7 @@ const openAi = require("./utils/openai_config");
 const catchAsync = require("./utils/catch-async");
 const GroupConversation = require("./src/models/group-conversation-model");
 const GroupMessages = require("./src/models/group-message-model");
+const RandomConversations = require("./src/models/random-chat-conversation");
 const axios = require("axios");
 dotenv.config();
 
@@ -55,9 +56,11 @@ io.on("connection", (socket: Socket) => {
     onlineUsers.set(userId, socket.id);
     io.emit("getUsers", Array.from(onlineUsers));
   });
+
   socket.on("joinRoom", (conversation: any) => {
     socket.join(conversation);
   });
+
   socket.on(
     "sendGroupMessage",
     async ({ conversationId, userId, message: text }) => {
@@ -105,6 +108,63 @@ io.on("connection", (socket: Socket) => {
       io.to(sendUserSocket).emit("getMessage", data);
     }
   });
+
+  socket.on("joinRandomChat", async (data: any) => {
+    try {
+      const { userName, url, language } = data;
+
+      const RandomUserExists = await RandomConversations.find();
+
+      if (RandomUserExists.length === 0) {
+        const RandomConversation = await RandomConversations.create({
+          user1: { userName, url, language },
+        });
+        socket.join(RandomConversation._id);
+
+        io.to(RandomConversation?._id).emit(
+          "randomResult",
+          "successfully added to waitlist..."
+        );
+      } else {
+        const RandomConversation = await RandomConversations.findOneAndUpdate(
+          { _id: RandomUserExists[0] },
+          { user2: { userName, url, language } },
+          { new: true }
+        );
+
+        socket.join(RandomConversation._id);
+
+        io.to(RandomConversation?._id).emit("randomResult", RandomConversation);
+
+        await RandomConversations.deleteMany();
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  });
+
+  socket.on(
+    "sendRandomMessage",
+    async ({ language, conversationId, message: text }) => {
+      const options = {
+        method: "POST",
+        url: process.env.TRANSLATE_URL,
+        headers: {
+          "content-type": "application/json",
+          "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
+          "X-RapidAPI-Host": process.env.API_HOST,
+        },
+        data: {
+          text,
+          target: language,
+        },
+      };
+      const response = await axios.request(options);
+      console.log(conversationId);
+
+      io.to(conversationId).emit("randomMessage", response.data[0].result.text);
+    }
+  );
 
   socket.on("isTyping", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);

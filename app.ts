@@ -13,6 +13,7 @@ const mainRouter = require("./src/routes/mainRouter");
 const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
 const groupsRoute = require("./src/routes/group-conversation-route");
+const RandomChats = require("./src/routes/random-chat-route");
 const swaggerUi = require("swagger-ui-express");
 const catchAsync = require("./utils/catch-async");
 app.use(express.json());
@@ -21,7 +22,7 @@ const userRouter = require("./src/routes/user-router");
 import uploadRouter from "./src/routes/upload-router";
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 const port: number = Number(process.env.PORT) || 8000;
-import multer from 'multer';
+import multer from "multer";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -55,7 +56,7 @@ app.use(express.static("public"));
 app.use(favicon(__dirname + "/public/favicon.ico"));
 app.use(passport.initialize());
 app.use(passport.session());
-app.use(upload.single('file'));
+app.use(upload.single("file"));
 
 // routes
 
@@ -108,6 +109,11 @@ app.use(
   "/api/v1/groups",
   passport.authenticate(["jwt"], { session: true }),
   groupsRoute
+);
+app.use(
+  "/api/v1/random-chats",
+  passport.authenticate(["jwt"], { session: true }),
+  RandomChats
 );
 
 // handle requests that do not exist on our server

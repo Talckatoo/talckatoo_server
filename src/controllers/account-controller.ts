@@ -27,7 +27,7 @@ exports.signUp = catchAsync(
       process.env.AZURE_TRANSLATOR_KEY,
       process.env.TRANSLATOR_ENDPOINT
     );
-    const welcome = response[0]?.text;
+    const welcome = response && response[0]?.text;
 
     const user = await User.create({
       userName,
