@@ -32,6 +32,7 @@ const listener = async () => {
   });
   console.log("connected to server");
 };
+
 const { PORT = 8000 } = process.env;
 const server = app.listen(PORT, listener);
 
@@ -230,6 +231,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answerCall", (data) => {
+
     const sendUserSocket = onlineUsers.get(data.call.from);
     const {roomId} = data.call
     socket.join(roomId);
@@ -267,6 +269,10 @@ io.on("connection", (socket: Socket) => {
     else {
       socket.emit("full");
     }
+
+
+    const sendUserSocket = onlineUsers.get(data.to);
+    io.to(sendUserSocket).emit("callAccepted", data.signal);
 
   });
 });

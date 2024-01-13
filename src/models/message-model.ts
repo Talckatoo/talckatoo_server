@@ -9,6 +9,7 @@ interface Imessage {
     public_id: String;
     url: String;
   };
+  media?: String;
   status: Boolean;
 }
 
@@ -28,6 +29,11 @@ const messageSchema = new Schema<Imessage>(
     voiceNote: {
       public_id: String,
       url: String,
+    },
+    media: {
+      type: Schema.Types.ObjectId,
+      ref: "Media",
+      required: false,
     },
     status: {
       type: Boolean,
