@@ -230,10 +230,14 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answerCall", (data) => {
+    
     const sendUserSocket = onlineUsers.get(data.call.from);
     const {roomId} = data.call
     socket.join(roomId);
-    io.to(roomId).emit('callAccepted', data.signal);
+    io.to(roomId).emit('callAccepted', {
+      signal: data.signal,
+      call: data.call
+    });
 
       // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
   
