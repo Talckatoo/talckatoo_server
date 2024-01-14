@@ -257,6 +257,7 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
       return next(new AppError("Authentication failed", 400));
     }
     const token = user.createJWT();
-    res.status(200).json({ token, user });
+    // redirect to the client with the token
+    res.redirect(`${process.env.CLIENT_URL}/?token=${token}`);
   })(req, res, next);
 }
