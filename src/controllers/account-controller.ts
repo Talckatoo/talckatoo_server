@@ -257,7 +257,21 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
       return next(new AppError("Authentication failed", 400));
     }
     const token = user.createJWT();
+    // code user data 
+    const userData = {
+      _id: user._id,
+      userName: user.userName,
+      email: user.email,
+      profileImage: user.profileImage,
+      language: user.language,
+      friends: user.friends,
+      conversations: user.conversations,
+    };
+    const codeedUserData = Buffer.from(JSON.stringify(userData)).toString(
+      "base64"
+    );
+
     // redirect to the client with the token
-    res.redirect(`${process.env.CLIENT_URL}/?token=${token}`);
+    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&user=${codeedUserData}`);
   })(req, res, next);
 }
