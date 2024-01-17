@@ -267,11 +267,8 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
       friends: user.friends,
       conversations: user.conversations,
     };
-    const codeedUserData = Buffer.from(JSON.stringify(userData)).toString(
-      "base64"
-    );
 
     // redirect to the client with the token
-    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&user=${codeedUserData}`);
+    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}}`);
   })(req, res, next);
 }
