@@ -70,11 +70,50 @@ exports.createMessage = catchAsync(
       targetLanguage,
       voiceToVoice,
       voiceTargetLanguage,
+      media,
       status,
       unread,
     } = req.body;
 
     const target = targetLanguage ? targetLanguage : "en";
+
+    if (media) {
+      console.log(media);
+      console.log("media");
+      const message = await Message.create({
+        media: media,
+        sender: from,
+      });
+
+      let conversation = await Conversation.findOneAndUpdate(
+        { users: { $all: [from, to] } },
+        {
+          $push: { messages: message.id },
+          $addToSet: { unread: to },
+        },
+        { new: true }
+      );
+
+      if (!conversation) {
+        conversation = await Conversation.create({
+          messages: [message.id],
+          users: [from, to],
+          unread: [to],
+        });
+
+        await User.findOneAndUpdate(
+          { _id: from },
+          { $push: { conversations: conversation.id } }
+        );
+
+        await User.findOneAndUpdate(
+          { _id: to },
+          { $push: { conversations: conversation.id } }
+        );
+      }
+
+      return res.status(201).json({ status: "Success", message });
+    }
 
     if (!text || !to || !from) {
       throw new AppError("Invalid Input. Please try again", 400);
