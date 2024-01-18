@@ -43,7 +43,18 @@ passport.use(
       callbackURL: process.env.GOOGLE_CALLBACK_URL,
       scope: ["profile", "email"],
     },
-    async (_accessToken: any, _refreshToken: any, profile: { id: any; displayName: any; emails: { value: any; }[]; }, done: (arg0: unknown, arg1: null) => any) => {
+    async (
+      _accessToken: any,
+      _refreshToken: any,
+      profile: {
+        id: any;
+        displayName: any;
+        emails: { value: any }[];
+        photos: { value: any }[];
+        _json: { locale: any };
+      },
+      done: (arg0: unknown, arg1: null) => any
+    ) => {
       try {
         // Check if user already exists in the database
         const existingUser = await User.findOne({ googleId: profile.id });
@@ -52,14 +63,17 @@ passport.use(
           return done(null, existingUser);
         }
 
+        console.log(profile, "This is the profile");
         // Create a new user with Google profile information
         const newUser = await User.create({
           userName: profile.displayName,
           email: profile.emails[0].value,
           googleId: profile.id,
-          language: "en",
+          language: profile._json.locale,
           welcome: "hello",
-          profileImage: (profile as any).picture, 
+          profileImage: {
+            url: profile.photos[0].value,
+          },
         });
 
         return done(null, newUser);
@@ -74,7 +88,6 @@ passport.serializeUser((user: any, done: any) => {
   return done(null, user.userId);
 });
 
-
 passport.deserializeUser(async (id: any, done: any) => {
   try {
     const user = await User.findOne({ _id: id });
@@ -88,5 +101,5 @@ passport.deserializeUser(async (id: any, done: any) => {
   }
 });
 
-export { };
+export {};
 module.exports = passport;

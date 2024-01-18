@@ -262,6 +262,6 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
     };
 
     // redirect to the client with the token
-    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}}`);
+    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}`);
   })(req, res, next);
 }
