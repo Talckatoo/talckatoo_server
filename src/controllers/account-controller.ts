@@ -1,4 +1,3 @@
-import { AnyARecord } from "dns";
 import { Request, Response, NextFunction } from "express";
 import getTranslation from "../../utils/translator-api";
 const User = require("../models/user-model");
@@ -10,6 +9,7 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
+
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
@@ -97,25 +97,7 @@ exports.logIn = catchAsync(
   }
 );
 
-// exports.loginWithGoogle = catchAsync(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     return passport.authenticate("google", {
-//       scope: ["profile", "email"],
-//       session: true,
-//     })(req, res, next);
-//   }
-// );
-
-// exports.redirectHome = catchAsync(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     return passport.authenticate("google", {
-//       scope: ["profile", "email"],
-//       session: true,
-//       failureRedirect: "/api/v1/users/auth/google",
-//     })(req, res, next);
-//   }
-// );
-
+// account-controller.js
 exports.logOut = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     if (req.user) {
@@ -249,3 +231,37 @@ exports.resetPassword = catchAsync(
     });
   }
 );
+
+// login with google account
+exports.loginWithGoogle = (req: Request, res: Response, next: NextFunction) => {
+  passport.authenticate("google", {
+    scope: ["profile", "email"],
+  })(req, res, next);
+};
+
+// Callback after Google has authenticated the user
+exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
+  // generate a token on succes 
+  passport.authenticate("google", { session: false }, (err: any, user: any) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      return next(new AppError("Authentication failed", 400));
+    }
+    const token = user.createJWT();
+    // code user data 
+    const userData = {
+      _id: user._id,
+      userName: user.userName,
+      email: user.email,
+      profileImage: user.profileImage,
+      language: user.language,
+      friends: user.friends,
+      conversations: user.conversations,
+    };
+
+    // redirect to the client with the token
+    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}}`);
+  })(req, res, next);
+}
