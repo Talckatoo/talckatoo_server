@@ -248,10 +248,14 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    const sendUserSocket = onlineUsers.get(data.call.from);
-    const {roomId} = data.call
+    
+
+    const {roomId} = data.callData
     socket.join(roomId);
-    io.to(roomId).emit('callAccepted', data.signal);
+    io.to(roomId).emit('callAccepted', {
+      signal: data.signal,
+      call: data.callData
+    });
 
       // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
   
@@ -259,11 +263,9 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("leaveCall", (data) => {
-    const { userToCall } = data;
-    const sendUserSocket = onlineUsers.get(userToCall);
+    const { userToCall, signalData, from, username, roomId } = data;
+    io.to(roomId).emit('leaveCall', { message: 'Leave room!' });
 
-    console.log(sendUserSocket);
-    io.to(sendUserSocket).emit("leaveCall", data);
   });
 
   // 2. Create a room for video call
