@@ -55,9 +55,11 @@ io.on("connection", (socket: Socket) => {
     onlineUsers.set(userId, socket.id);
     io.emit("getUsers", Array.from(onlineUsers));
   });
+
   socket.on("joinRoom", (conversation: any) => {
     socket.join(conversation);
   });
+  
   socket.on(
     "sendGroupMessage",
     async ({ conversationId, userId, message: text }) => {
@@ -112,6 +114,7 @@ io.on("connection", (socket: Socket) => {
       io.to(sendUserSocket).emit("isTyping", data);
     }
   });
+
   socket.on("stopTyping", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
@@ -188,6 +191,20 @@ io.on("connection", (socket: Socket) => {
     for (let i = 0; i < onlineFriends.length; i++) {
       let socketUserId = onlineUsers.get(onlineFriends[i]._id);
       io.to(socketUserId).emit("getUpdateProfile", data);
+    }
+  });
+
+  socket.on("sendFriendRequest", (data: any) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      io.to(sendUserSocket).emit("getFriendRequest", data);
+    }
+  });
+
+  socket.on("acceptFriendRequest", (data: any) => {
+    const sendUserSocket = onlineUsers.get(data.to);
+    if (sendUserSocket) {
+      io.to(sendUserSocket).emit("getAcceptFriendRequest", data);
     }
   });
 
