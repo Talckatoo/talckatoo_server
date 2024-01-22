@@ -145,17 +145,5 @@ export const handleFindUsers = async (req: Request, res: Response) => {
     return res.status(400).json({ message: "Cannot send to self" });
   }
 
-  const friendRequests = await getFriendRequestsService(userId);
-
-  const existingFriendRequest = friendRequests.find(
-    (friendRequest: any) =>
-      friendRequest.from._id.toString() === seachedUser._id.toString() ||
-      friendRequest.to._id.toString() === seachedUser._id.toString()
-  );
-
-  if (existingFriendRequest) {
-    return res.status(400).json({ message: "Friend request already sent" });
-  }
-
   return res.status(200).json({ seachedUser });
 };
