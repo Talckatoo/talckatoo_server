@@ -65,7 +65,7 @@ export const sendFriendRequest = async (
     // "to" user is the one to whom the friend request is sent
     const { identifier } = req.body;
     const message = await sendFriendRequestService(fromUserId, identifier);
-    res.status(200).json({ message });
+    res.status(200).json(message);
   } catch (error) {
     next(error);
   }
@@ -105,7 +105,8 @@ export const handleFriendRequestResponse = async (
       friendRequestId,
       action
     );
-    res.status(200).json({ message });
+
+    res.status(200).json(message);
   } catch (error) {
     next(error);
   }
