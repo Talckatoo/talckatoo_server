@@ -1,6 +1,7 @@
 import { Types } from "mongoose";
 import User from "../models/user-model";
 import friendRequestModel from "../models/friendRequest-model";
+const Conversation = require("../models/conversation-model");
 
 // Error Constants
 const ERR_USER_NOT_FOUND = "User not found";
@@ -77,7 +78,17 @@ export const sendFriendRequestService = async (
     { $push: { friendRequests: friendRequest._id } }
   );
 
-  return "Friend request sent successfully";
+  // Step 6: get the friend request data
+  const friendRequestData = await friendRequestModel
+    .findById(friendRequest._id)
+    .populate("from", "userName")
+    .populate("to", "userName")
+    .exec();
+
+  return {
+    message: "Friend request sent successfully",
+    friendRequest: friendRequestData,
+  };
 };
 
 /**
@@ -113,6 +124,23 @@ export const handleFriendRequestResponseService = async (
   friendRequest.status = updatedStatus;
   await friendRequest.save();
 
+  // // create a conversation between the two users
+  // if (updatedStatus === FriendRequestStatus.ACCEPTED) {
+  //   const conversation = await Conversation.create({
+  //     users: [friendRequest.from, friendRequest.to],
+  //     unread: [friendRequest.to],
+  //   });
+  //   // add the conversation to the users' conversations array
+  //   await User.updateOne(
+  //     { _id: friendRequest.from },
+  //     { $push: { conversations: conversation._id } }
+  //   );
+  //   await User.updateOne(
+  //     { _id: friendRequest.to },
+  //     { $push: { conversations: conversation._id } }
+  //   );
+  // }
+
   // step3: remove the friend request from the user's friendRequests array
   await User.updateOne(
     { _id: friendRequest.from },
@@ -135,8 +163,16 @@ export const handleFriendRequestResponseService = async (
     );
   }
 
+  // get the user data from and to
+  const fromUser = await User.findById(friendRequest.from);
+  const toUser = await User.findById(friendRequest.to);
+
   // step5: return a message indicating the result of the operation
-  return `Friend request ${action}ed successfully`;
+  return {
+    message: `Friend request ${action}ed successfully`,
+    from: fromUser,
+    to: toUser,
+  };
 };
 
 /**
