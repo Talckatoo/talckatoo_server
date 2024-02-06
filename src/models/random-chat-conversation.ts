@@ -10,7 +10,12 @@ interface Iconversation {
 // conversation schema
 const conversationSchema = new Schema<Iconversation>(
   {
-    user1: { userName: String, url: String, language: String },
+    user1: {
+      userName: String,
+      url: String,
+      language: String,
+      socketId: String,
+    },
     user2: { userName: String, url: String, language: String },
   },
   { timestamps: true }

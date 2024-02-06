@@ -60,7 +60,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("joinRoom", (conversation: any) => {
     socket.join(conversation);
   });
-  
+
   socket.on(
     "sendGroupMessage",
     async ({ conversationId, userId, message: text }) => {
@@ -113,33 +113,47 @@ io.on("connection", (socket: Socket) => {
     try {
       const { userName, url, language } = data;
 
-      const RandomUserExists = await RandomConversations.find();
+      // Log the socket ID
+      console.log(`Socket ID: ${socket.id}`);
 
-      if (RandomUserExists.length === 0) {
-        const RandomConversation = await RandomConversations.create({
-          user1: { userName, url, language },
+      // Check if there's an existing random conversation
+      const existingConversation = await RandomConversations.findOneAndUpdate(
+        { user2: null },
+        { user2: { userName, url, language } },
+        { new: true }
+      );
+
+      if (!existingConversation) {
+        console.log("No existing random conversation");
+
+        // Create a new random conversation if none exists
+        const newConversation = await RandomConversations.create({
+          user1: { userName, url, language, socketId: socket.id },
         });
-        socket.join(RandomConversation._id);
 
-        io.to(RandomConversation?._id).emit(
-          "randomResult",
-          "successfully added to waitlist..."
-        );
+        console.log("New random conversation created:", newConversation);
+
+        // Emit event to the user who joined the random chat
+        io.to(socket.id).emit("randomResult", newConversation);
       } else {
-        const RandomConversation = await RandomConversations.findOneAndUpdate(
-          { _id: RandomUserExists[0] },
-          { user2: { userName, url, language } },
-          { new: true }
+        console.log(
+          "Existing random conversation found:",
+          existingConversation
         );
 
-        socket.join(RandomConversation._id);
+        // Emit event to the user who joined the random chat
+        io.to(socket.id).emit("randomResult", existingConversation);
 
-        io.to(RandomConversation?._id).emit("randomResult", RandomConversation);
+        io.to(existingConversation.user1.socketId).emit(
+          "randomResult",
+          existingConversation
+        );
 
-        await RandomConversations.deleteMany();
+        // Delete the existing conversation
+        await RandomConversations.findByIdAndDelete(existingConversation._id);
       }
     } catch (error) {
-      console.log(error);
+      console.error("Error joining random chat:", error);
     }
   });
 
@@ -291,9 +305,9 @@ io.on("connection", (socket: Socket) => {
 
     // Emit to the current socket
     // socket.emit('roomCreated', { message: 'Room created!' });
-  
+
     // Emit to all sockets in the room
-    io.to(roomId).emit('roomCreated', { message: 'Room created!' });
+    io.to(roomId).emit("roomCreated", { message: "Room created!" });
 
     const sendUserSocket = onlineUsers.get(userToCall);
     io.to(sendUserSocket).emit("callUser", {
@@ -306,24 +320,21 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    
-
-    const {roomId} = data.callData
+    const { roomId } = data.callData;
     socket.join(roomId);
-    io.to(roomId).emit('callAccepted', {
+    io.to(roomId).emit("callAccepted", {
       signal: data.signal,
-      call: data.callData
+      call: data.callData,
     });
 
-      // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
-  
+    // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
+
     // io.to(sendUserSocket).emit("callAccepted", data.signal);
   });
 
   socket.on("leaveCall", (data) => {
     const { userToCall, signalData, from, username, roomId } = data;
-    io.to(roomId).emit('leaveCall', { message: 'Leave room!' });
-
+    io.to(roomId).emit("leaveCall", { message: "Leave room!" });
   });
 
   // 2. Create a room for video call
@@ -345,8 +356,5 @@ io.on("connection", (socket: Socket) => {
     else {
       socket.emit("full");
     }
-
   });
 });
-
-
