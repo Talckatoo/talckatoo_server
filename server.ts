@@ -15,6 +15,7 @@ const openAi = require("./utils/openai_config");
 const catchAsync = require("./utils/catch-async");
 const GroupConversation = require("./src/models/group-conversation-model");
 const GroupMessages = require("./src/models/group-message-model");
+const RandomConversations = require("./src/models/random-chat-conversation");
 const axios = require("axios");
 dotenv.config();
 
@@ -59,7 +60,7 @@ io.on("connection", (socket: Socket) => {
   socket.on("joinRoom", (conversation: any) => {
     socket.join(conversation);
   });
-  
+
   socket.on(
     "sendGroupMessage",
     async ({ conversationId, userId, message: text }) => {
@@ -105,6 +106,95 @@ io.on("connection", (socket: Socket) => {
     const sendUserSocket = onlineUsers.get(data.to);
     if (sendUserSocket) {
       io.to(sendUserSocket).emit("getMessage", data);
+    }
+  });
+
+  socket.on("joinRandomChat", async (data: any) => {
+    try {
+      const { userName, profilePicture, language, id, email } = data;
+
+      // Log the socket ID
+      console.log(`Socket ID: ${socket.id}`);
+
+      // Check if there's an existing random conversation
+      const existingConversation = await RandomConversations.findOneAndUpdate(
+        { user2: null },
+        {
+          user2: {
+            userName,
+            profilePicture,
+            language,
+            id,
+            email,
+            socketId: socket.id,
+          },
+        },
+        { new: true }
+      );
+
+      if (!existingConversation) {
+        console.log("No existing random conversation");
+
+        // Create a new random conversation if none exists
+        const newConversation = await RandomConversations.create({
+          user1: {
+            userName,
+            profilePicture,
+            language,
+            socketId: socket.id,
+            id,
+            email,
+          },
+        });
+
+        console.log("New random conversation created:", newConversation);
+
+        // Emit event to the user who joined the random chat
+        io.to(socket.id).emit("randomResult", newConversation);
+      } else {
+        console.log(
+          "Existing random conversation found:",
+          existingConversation
+        );
+
+        // Emit event to the user who joined the random chat
+        io.to(socket.id).emit("randomResult", existingConversation);
+
+        io.to(existingConversation.user1.socketId).emit(
+          "randomResult",
+          existingConversation
+        );
+
+        // Delete the existing conversation
+        await RandomConversations.deleteOne({ _id: existingConversation._id });
+      }
+    } catch (error) {
+      console.error("Error joining random chat:", error);
+    }
+  });
+
+  socket.on("sendRandomMessage", async (data) => {
+    if (data.message) {
+      const options = {
+        method: "POST",
+        url: process.env.TRANSLATE_URL,
+        headers: {
+          "content-type": "application/json",
+          "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
+          "X-RapidAPI-Host": process.env.API_HOST,
+        },
+        data: {
+          text: data.message,
+          target: data.language,
+        },
+      };
+      const response = await axios.request(options);
+      io.to(data.socketId).emit("getRandomMessage", {
+        ...data,
+        message: response.data[0].result.text,
+      });
+    } else {
+      io.to(data.socketId).emit("getRandomMessage", data);
     }
   });
 
@@ -233,9 +323,9 @@ io.on("connection", (socket: Socket) => {
 
     // Emit to the current socket
     // socket.emit('roomCreated', { message: 'Room created!' });
-  
+
     // Emit to all sockets in the room
-    io.to(roomId).emit('roomCreated', { message: 'Room created!' });
+    io.to(roomId).emit("roomCreated", { message: "Room created!" });
 
     const sendUserSocket = onlineUsers.get(userToCall);
     io.to(sendUserSocket).emit("callUser", {
@@ -248,24 +338,21 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("answerCall", (data) => {
-    
-
-    const {roomId} = data.callData
+    const { roomId } = data.callData;
     socket.join(roomId);
-    io.to(roomId).emit('callAccepted', {
+    io.to(roomId).emit("callAccepted", {
       signal: data.signal,
-      call: data.callData
+      call: data.callData,
     });
 
-      // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
-  
+    // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
+
     // io.to(sendUserSocket).emit("callAccepted", data.signal);
   });
 
   socket.on("leaveCall", (data) => {
     const { userToCall, signalData, from, username, roomId } = data;
-    io.to(roomId).emit('leaveCall', { message: 'Leave room!' });
-
+    io.to(roomId).emit("leaveCall", { message: "Leave room!" });
   });
 
   // 2. Create a room for video call
@@ -287,8 +374,5 @@ io.on("connection", (socket: Socket) => {
     else {
       socket.emit("full");
     }
-
   });
 });
-
-
