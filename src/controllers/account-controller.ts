@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import getTranslation from "../../utils/translator-api";
+import generateVerificationCode from "../../utils/regenerateVerificationCode";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
 const passport = require("../../utils/passport-config");
@@ -9,6 +10,7 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
+const generateCodeVerification = require("../../utils/generate-code-verification");
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -265,3 +267,38 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
     res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}`);
   })(req, res, next);
 }
+
+exports. emailVerification = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new Error("Please specify your email address");
+
+    // Generate verification code
+    const verificationCode = generateVerificationCode();
+
+    // Send verification email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.NODEMAILER_USER,
+      to: email,
+      subject: "Email Verification",
+      text: `Your verification code is: ${verificationCode}`,
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Verification code sent to your email",
+      verificationCode: verificationCode, // Sending verification code in response (for testing purposes)
+    });
+  } catch (error: any) {
+    console.error('Error sending verification email:', error);
+    res.status(500).json({ message: error.message });
+  }
+};
