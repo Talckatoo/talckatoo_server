@@ -111,7 +111,7 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("joinRandomChat", async (data: any) => {
     try {
-      const { userName, url, language } = data;
+      const { userName, profilePicture, language, id, email } = data;
 
       // Log the socket ID
       console.log(`Socket ID: ${socket.id}`);
@@ -119,7 +119,16 @@ io.on("connection", (socket: Socket) => {
       // Check if there's an existing random conversation
       const existingConversation = await RandomConversations.findOneAndUpdate(
         { user2: null },
-        { user2: { userName, url, language } },
+        {
+          user2: {
+            userName,
+            profilePicture,
+            language,
+            id,
+            email,
+            socketId: socket.id,
+          },
+        },
         { new: true }
       );
 
@@ -128,7 +137,14 @@ io.on("connection", (socket: Socket) => {
 
         // Create a new random conversation if none exists
         const newConversation = await RandomConversations.create({
-          user1: { userName, url, language, socketId: socket.id },
+          user1: {
+            userName,
+            profilePicture,
+            language,
+            socketId: socket.id,
+            id,
+            email,
+          },
         });
 
         console.log("New random conversation created:", newConversation);
@@ -150,16 +166,15 @@ io.on("connection", (socket: Socket) => {
         );
 
         // Delete the existing conversation
-        await RandomConversations.findByIdAndDelete(existingConversation._id);
+        await RandomConversations.deleteOne({ _id: existingConversation._id });
       }
     } catch (error) {
       console.error("Error joining random chat:", error);
     }
   });
 
-  socket.on(
-    "sendRandomMessage",
-    async ({ language, conversationId, message: text }) => {
+  socket.on("sendRandomMessage", async (data) => {
+    if (data.message) {
       const options = {
         method: "POST",
         url: process.env.TRANSLATE_URL,
@@ -169,16 +184,19 @@ io.on("connection", (socket: Socket) => {
           "X-RapidAPI-Host": process.env.API_HOST,
         },
         data: {
-          text,
-          target: language,
+          text: data.message,
+          target: data.language,
         },
       };
       const response = await axios.request(options);
-      console.log(conversationId);
-
-      io.to(conversationId).emit("randomMessage", response.data[0].result.text);
+      io.to(data.socketId).emit("getRandomMessage", {
+        ...data,
+        message: response.data[0].result.text,
+      });
+    } else {
+      io.to(data.socketId).emit("getRandomMessage", data);
     }
-  );
+  });
 
   socket.on("isTyping", (data: any) => {
     const sendUserSocket = onlineUsers.get(data.to);

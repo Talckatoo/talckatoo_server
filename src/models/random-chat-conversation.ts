@@ -9,6 +9,7 @@ interface Iconversation {
     language: String;
     id: String;
     email: String;
+    socketId: String;
   };
   user2: {
     userName: String;
@@ -16,6 +17,7 @@ interface Iconversation {
     language: String;
     id: String;
     email: String;
+    socketId: String;
   };
 }
 
@@ -28,6 +30,7 @@ const conversationSchema = new Schema<Iconversation>(
       language: String,
       id: String,
       email: String,
+      socketId: String,
     },
     user2: {
       userName: String,
@@ -35,6 +38,7 @@ const conversationSchema = new Schema<Iconversation>(
       language: String,
       id: String,
       email: String,
+      socketId: String,
     },
   },
   { timestamps: true }
