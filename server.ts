@@ -35,7 +35,7 @@ const listener = async () => {
 };
 
 const { PORT = 8000 } = process.env;
-const server = app.listen(PORT, listener);
+const server = app.listen(PORT || "8000", listener);
 
 const io = socket(server, {
   cors: {
