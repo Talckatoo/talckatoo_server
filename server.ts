@@ -276,103 +276,103 @@ io.on("connection", (socket: Socket) => {
     );
   });
 
-  socket.on("updateProfile", (data: any) => {
-    const onlineFriends = data.onlineFriends;
-    for (let i = 0; i < onlineFriends.length; i++) {
-      let socketUserId = onlineUsers.get(onlineFriends[i]._id);
-      io.to(socketUserId).emit("getUpdateProfile", data);
-    }
-  });
+  // socket.on("updateProfile", (data: any) => {
+  //   const onlineFriends = data.onlineFriends;
+  //   for (let i = 0; i < onlineFriends.length; i++) {
+  //     let socketUserId = onlineUsers.get(onlineFriends[i]._id);
+  //     io.to(socketUserId).emit("getUpdateProfile", data);
+  //   }
+  // });
 
-  socket.on("sendFriendRequest", (data: any) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    if (sendUserSocket) {
-      io.to(sendUserSocket).emit("getFriendRequest", data);
-    }
-  });
+  // socket.on("sendFriendRequest", (data: any) => {
+  //   const sendUserSocket = onlineUsers.get(data.to);
+  //   if (sendUserSocket) {
+  //     io.to(sendUserSocket).emit("getFriendRequest", data);
+  //   }
+  // });
 
-  socket.on("acceptFriendRequest", (data: any) => {
-    const sendUserSocket = onlineUsers.get(data.to);
-    if (sendUserSocket) {
-      io.to(sendUserSocket).emit("getAcceptFriendRequest", data);
-    }
-  });
+  // socket.on("acceptFriendRequest", (data: any) => {
+  //   const sendUserSocket = onlineUsers.get(data.to);
+  //   if (sendUserSocket) {
+  //     io.to(sendUserSocket).emit("getAcceptFriendRequest", data);
+  //   }
+  // });
 
-  socket.on("disconnect", () => {
-    // Remove the disconnected socket from onlineUsers map
-    for (const [userId, socketId] of onlineUsers) {
-      if (socketId === socket.id) {
-        onlineUsers.delete(userId);
-        break;
-      }
-    }
-    io.emit("getUsers", Array.from(onlineUsers));
-  });
+  // socket.on("disconnect", () => {
+  //   // Remove the disconnected socket from onlineUsers map
+  //   for (const [userId, socketId] of onlineUsers) {
+  //     if (socketId === socket.id) {
+  //       onlineUsers.delete(userId);
+  //       break;
+  //     }
+  //   }
+  //   io.emit("getUsers", Array.from(onlineUsers));
+  // });
 
-  // setting up video call
+  // // setting up video call
 
-  // 1. Get logged in user ID: pass the userID in socket and get it from onlineUsers
+  // // 1. Get logged in user ID: pass the userID in socket and get it from onlineUsers
 
-  socket.on("callUser", (data: any) => {
-    const { userToCall, signalData, from, username, roomId } = data;
-    // getting a room from the socket adapter
-    // const { rooms } = io.sockets.adapter;
-    // const room = rooms.get(roomId);
+  // socket.on("callUser", (data: any) => {
+  //   const { userToCall, signalData, from, username, roomId } = data;
+  //   // getting a room from the socket adapter
+  //   // const { rooms } = io.sockets.adapter;
+  //   // const room = rooms.get(roomId);
 
-    socket.join(roomId);
+  //   socket.join(roomId);
 
-    // Emit to the current socket
-    // socket.emit('roomCreated', { message: 'Room created!' });
+  //   // Emit to the current socket
+  //   // socket.emit('roomCreated', { message: 'Room created!' });
 
-    // Emit to all sockets in the room
-    io.to(roomId).emit("roomCreated", { message: "Room created!" });
+  //   // Emit to all sockets in the room
+  //   io.to(roomId).emit("roomCreated", { message: "Room created!" });
 
-    const sendUserSocket = onlineUsers.get(userToCall);
-    io.to(sendUserSocket).emit("callUser", {
-      signal: signalData,
-      from,
-      username,
-      roomId,
-      userToCall,
-    });
-  });
+  //   const sendUserSocket = onlineUsers.get(userToCall);
+  //   io.to(sendUserSocket).emit("callUser", {
+  //     signal: signalData,
+  //     from,
+  //     username,
+  //     roomId,
+  //     userToCall,
+  //   });
+  // });
 
-  socket.on("answerCall", (data) => {
-    const { roomId } = data.callData;
-    socket.join(roomId);
-    io.to(roomId).emit("callAccepted", {
-      signal: data.signal,
-      call: data.callData,
-    });
+  // socket.on("answerCall", (data) => {
+  //   const { roomId } = data.callData;
+  //   socket.join(roomId);
+  //   io.to(roomId).emit("callAccepted", {
+  //     signal: data.signal,
+  //     call: data.callData,
+  //   });
 
-    // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
+  //   // socket.broadcast.to(roomId).emit("callAccepted", data.signal)
 
-    // io.to(sendUserSocket).emit("callAccepted", data.signal);
-  });
+  //   // io.to(sendUserSocket).emit("callAccepted", data.signal);
+  // });
 
-  socket.on("leaveCall", (data) => {
-    const { userToCall, signalData, from, username, roomId } = data;
-    io.to(roomId).emit("leaveCall", { message: "Leave room!" });
-  });
+  // socket.on("leaveCall", (data) => {
+  //   const { userToCall, signalData, from, username, roomId } = data;
+  //   io.to(roomId).emit("leaveCall", { message: "Leave room!" });
+  // });
 
-  // 2. Create a room for video call
-  socket.on("join", (roomId) => {
-    // getting a room from the socket adapter
-    const { rooms } = io.sockets.adapter;
-    const room = rooms.get(roomId);
-    // Scenario 1 when there's no one in the room
-    if (room === undefined) {
-      socket.join(roomId);
-      socket.emit("creates");
-    }
-    // Scenario 2 when 1 person is in the room
-    else if (room.size == 1) {
-      socket.join(roomId);
-      socket.emit("joined");
-    }
-    // Scenario 3 when there already 2 users in the room
-    else {
-      socket.emit("full");
-    }
-  });
+  // // 2. Create a room for video call
+  // socket.on("join", (roomId) => {
+  //   // getting a room from the socket adapter
+  //   const { rooms } = io.sockets.adapter;
+  //   const room = rooms.get(roomId);
+  //   // Scenario 1 when there's no one in the room
+  //   if (room === undefined) {
+  //     socket.join(roomId);
+  //     socket.emit("creates");
+  //   }
+  //   // Scenario 2 when 1 person is in the room
+  //   else if (room.size == 1) {
+  //     socket.join(roomId);
+  //     socket.emit("joined");
+  //   }
+  //   // Scenario 3 when there already 2 users in the room
+  //   else {
+  //     socket.emit("full");
+  //   }
+  // });
 });
