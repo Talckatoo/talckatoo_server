@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 
 import { Socket } from "socket.io";
 import { isPromise } from "util/types";
+import getTranslation from "./utils/translator-api";
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -174,24 +175,23 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("sendRandomMessage", async (data) => {
+    console.log(data);
     if (data.message) {
-      const options = {
-        method: "POST",
-        url: process.env.TRANSLATE_URL,
-        headers: {
-          "content-type": "application/json",
-          "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
-          "X-RapidAPI-Host": process.env.API_HOST,
-        },
-        data: {
-          text: data.message,
-          target: data.language,
-        },
-      };
-      const response = await axios.request(options);
+      const text = data.message;
+      const target = data.language;
+
+      const response: any = await getTranslation(
+        target,
+        text,
+        process.env.AZURE_TRANSLATOR_KEY,
+        process.env.TRANSLATOR_ENDPOINT
+      );
+
+      const translate = `\n${response[0]?.text}`;
+
       io.to(data.socketId).emit("getRandomMessage", {
         ...data,
-        message: response.data[0].result.text,
+        message: text + translate,
       });
     } else {
       io.to(data.socketId).emit("getRandomMessage", data);
