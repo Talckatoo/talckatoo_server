@@ -11,9 +11,24 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 
+// checck if email esists
+const checkEmail = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    const user = await User.findOne({ email });
+    if (user) {
+      throw new AppError("The email is already in use", 400);
+    }
+    next();
+  }
+);
+
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
+
+    // check if the email exists
+    checkEmail(req, res, next);
 
     if (!userName || !email || !password) {
       throw new AppError(
@@ -241,8 +256,8 @@ exports.loginWithGoogle = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Callback after Google has authenticated the user
-exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
-  // generate a token on succes 
+exports.googleCallback = (req: Request, res: Response, next: NextFunction) => {
+  // generate a token on succes
   passport.authenticate("google", { session: false }, (err: any, user: any) => {
     if (err) {
       return next(err);
@@ -251,7 +266,7 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
       return next(new AppError("Authentication failed", 400));
     }
     const token = user.createJWT();
-    // code user data 
+    // code user data
     const userData = {
       _id: user._id,
       userName: user.userName,
@@ -263,11 +278,17 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
     };
 
     // redirect to the client with the token
-    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}`);
+    res.redirect(
+      `${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}`
+    );
   })(req, res, next);
-}
+};
 
-exports. emailVerification = async (req: Request, res: Response, next: NextFunction) => {
+exports.emailVerification = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email } = req.body;
     if (!email) throw new Error("Please specify your email address");
@@ -297,7 +318,7 @@ exports. emailVerification = async (req: Request, res: Response, next: NextFunct
       verificationCode: verificationCode, // Sending verification code in response (for testing purposes)
     });
   } catch (error: any) {
-    console.error('Error sending verification email:', error);
+    console.error("Error sending verification email:", error);
     res.status(500).json({ message: error.message });
   }
 };
