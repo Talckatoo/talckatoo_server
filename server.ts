@@ -113,11 +113,6 @@ io.on("connection", (socket: Socket) => {
   socket.on("joinRandomChat", async (data: any) => {
     try {
       const { userName, profilePicture, language, id, email } = data;
-
-      // Log the socket ID
-      console.log(`Socket ID: ${socket.id}`);
-
-      // Check if there's an existing random conversation
       const existingConversation = await RandomConversations.findOneAndUpdate(
         { user2: null },
         {
@@ -134,8 +129,6 @@ io.on("connection", (socket: Socket) => {
       );
 
       if (!existingConversation) {
-        console.log("No existing random conversation");
-
         // Create a new random conversation if none exists
         const newConversation = await RandomConversations.create({
           user1: {
@@ -148,16 +141,8 @@ io.on("connection", (socket: Socket) => {
           },
         });
 
-        console.log("New random conversation created:", newConversation);
-
-        // Emit event to the user who joined the random chat
         io.to(socket.id).emit("randomResult", newConversation);
       } else {
-        console.log(
-          "Existing random conversation found:",
-          existingConversation
-        );
-
         // Emit event to the user who joined the random chat
         io.to(socket.id).emit("randomResult", existingConversation);
 
@@ -175,7 +160,6 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("sendRandomMessage", async (data) => {
-    console.log(data);
     if (data.message) {
       const text = data.message;
       const target = data.language;
