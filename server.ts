@@ -193,8 +193,13 @@ io.on("connection", (socket: Socket) => {
         ...data,
         message: text + translate,
       });
+      io.to(socket.id).emit("getRandomMessage", {
+        ...data,
+        message: text + translate,
+      });
     } else {
       io.to(data.socketId).emit("getRandomMessage", data);
+      io.to(socket.id).emit("getRandomMessage", data);
     }
   });
 
