@@ -12,23 +12,27 @@ const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 
 // checck if email esists
-export const checkEmail = catchAsync(
-  async (req: Request, res: Response, next: NextFunction) => {
-    const { email } = req.body;
-    const user = await User.findOne({ email });
-    if (user) {
-      throw new AppError("The email is already in use", 400);
-    }
-    next();
-  }
-);
+// export const checkEmail = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { email } = req.body;
+//     const user = await User.findOne({ email });
+//     if (user) {
+//       throw new AppError("The email is already in use", 400);
+//     }
+//     next();
+//   }
+// );
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
 
     // check if the email exists
-    checkEmail(req, res, next);
+    const userEmail = await User.findOne({ email });
+
+    if (userEmail) {
+      throw new AppError("The email is already in use", 400);
+    }
 
     if (!userName || !email || !password) {
       throw new AppError(
@@ -293,7 +297,13 @@ exports.emailVerification = async (
     const { email } = req.body;
     if (!email) throw new Error("Please provide an email address");
 
-    checkEmail(req, res, next);
+    const userEmail = await User.findOne({ email });
+
+    if (userEmail) {
+      throw new AppError("The email is already in use", 400);
+    }
+
+    // await checkEmail(req, res, next);
     // Generate verification code
     const verificationCode = generateVerificationCode();
 
@@ -320,6 +330,6 @@ exports.emailVerification = async (
     });
   } catch (error: any) {
     console.error("Error sending verification email:", error);
-    res.status(500).json({ message: error.message });
+    res.status(400).json({ message: error.message });
   }
 };
