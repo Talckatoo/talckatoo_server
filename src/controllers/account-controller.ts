@@ -12,7 +12,7 @@ const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 
 // checck if email esists
-const checkEmail = catchAsync(
+export const checkEmail = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email } = req.body;
     const user = await User.findOne({ email });
@@ -291,8 +291,9 @@ exports.emailVerification = async (
 ) => {
   try {
     const { email } = req.body;
-    if (!email) throw new Error("Please specify your email address");
+    if (!email) throw new Error("Please provide an email address");
 
+    checkEmail(req, res, next);
     // Generate verification code
     const verificationCode = generateVerificationCode();
 
