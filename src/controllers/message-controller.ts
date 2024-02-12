@@ -78,8 +78,6 @@ exports.createMessage = catchAsync(
     const target = targetLanguage ? targetLanguage : "en";
 
     if (media) {
-      console.log(media);
-      console.log("media");
       const message = await Message.create({
         media: media,
         sender: from,
