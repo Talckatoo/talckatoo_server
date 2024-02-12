@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 
 import { Socket } from "socket.io";
 import { isPromise } from "util/types";
+import getTranslation from "./utils/translator-api";
 
 const mongoose = require("mongoose");
 const dotenv = require("dotenv");
@@ -35,7 +36,7 @@ const listener = async () => {
 };
 
 const { PORT = 8000 } = process.env;
-const server = app.listen(PORT, listener);
+const server = app.listen(PORT || "8000", listener);
 
 const io = socket(server, {
   cors: {
@@ -112,11 +113,6 @@ io.on("connection", (socket: Socket) => {
   socket.on("joinRandomChat", async (data: any) => {
     try {
       const { userName, profilePicture, language, id, email } = data;
-
-      // Log the socket ID
-      console.log(`Socket ID: ${socket.id}`);
-
-      // Check if there's an existing random conversation
       const existingConversation = await RandomConversations.findOneAndUpdate(
         { user2: null },
         {
@@ -133,8 +129,6 @@ io.on("connection", (socket: Socket) => {
       );
 
       if (!existingConversation) {
-        console.log("No existing random conversation");
-
         // Create a new random conversation if none exists
         const newConversation = await RandomConversations.create({
           user1: {
@@ -147,16 +141,8 @@ io.on("connection", (socket: Socket) => {
           },
         });
 
-        console.log("New random conversation created:", newConversation);
-
-        // Emit event to the user who joined the random chat
         io.to(socket.id).emit("randomResult", newConversation);
       } else {
-        console.log(
-          "Existing random conversation found:",
-          existingConversation
-        );
-
         // Emit event to the user who joined the random chat
         io.to(socket.id).emit("randomResult", existingConversation);
 
@@ -175,26 +161,29 @@ io.on("connection", (socket: Socket) => {
 
   socket.on("sendRandomMessage", async (data) => {
     if (data.message) {
-      const options = {
-        method: "POST",
-        url: process.env.TRANSLATE_URL,
-        headers: {
-          "content-type": "application/json",
-          "X-RapidAPI-Key": process.env.TRANSLATE_API_KEY,
-          "X-RapidAPI-Host": process.env.API_HOST,
-        },
-        data: {
-          text: data.message,
-          target: data.language,
-        },
-      };
-      const response = await axios.request(options);
+      const text = data.message;
+      const target = data.language;
+
+      const response: any = await getTranslation(
+        target,
+        text,
+        process.env.AZURE_TRANSLATOR_KEY,
+        process.env.TRANSLATOR_ENDPOINT
+      );
+
+      const translate = `\n${response[0]?.text}`;
+
       io.to(data.socketId).emit("getRandomMessage", {
         ...data,
-        message: response.data[0].result.text,
+        message: text + translate,
+      });
+      io.to(socket.id).emit("getRandomMessage", {
+        ...data,
+        message: text + translate,
       });
     } else {
       io.to(data.socketId).emit("getRandomMessage", data);
+      io.to(socket.id).emit("getRandomMessage", data);
     }
   });
 
