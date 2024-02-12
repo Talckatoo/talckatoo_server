@@ -10,6 +10,7 @@ const {
   resetPassword,
   loginWithGoogle,
   googleCallback,
+  emailVerification,
 } = require("../controllers/account-controller");
 /**
  * @swagger
@@ -100,6 +101,7 @@ router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password/:token").post(resetPassword);
 router.route("/loginWithGoogle").get(loginWithGoogle);
 router.route("/auth/google/callback").get(googleCallback);
+router.route("/emailVerification").post(emailVerification);
 
 export {};
 module.exports = router;
