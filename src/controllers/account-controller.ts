@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import getTranslation from "../../utils/translator-api";
+import generateVerificationCode from "../../utils/regenerateVerificationCode";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
 const passport = require("../../utils/passport-config");
@@ -10,9 +11,17 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 
+
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
+
+    // check if the email exists
+    const userEmail = await User.findOne({ email });
+
+    if (userEmail) {
+      throw new AppError("The email is already in use", 400);
+    }
 
     if (!userName || !email || !password) {
       throw new AppError(
@@ -240,8 +249,8 @@ exports.loginWithGoogle = (req: Request, res: Response, next: NextFunction) => {
 };
 
 // Callback after Google has authenticated the user
-exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
-  // generate a token on succes 
+exports.googleCallback = (req: Request, res: Response, next: NextFunction) => {
+  // generate a token on succes
   passport.authenticate("google", { session: false }, (err: any, user: any) => {
     if (err) {
       return next(err);
@@ -250,7 +259,7 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
       return next(new AppError("Authentication failed", 400));
     }
     const token = user.createJWT();
-    // code user data 
+    // code user data
     const userData = {
       _id: user._id,
       userName: user.userName,
@@ -262,6 +271,52 @@ exports.googleCallback = (req:Request, res: Response, next: NextFunction) => {
     };
 
     // redirect to the client with the token
-    res.redirect(`${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}`);
+    res.redirect(
+      `${process.env.CLIENT_URL}/?token=${token}&userId=${userData._id}`
+    );
   })(req, res, next);
-}
+};
+
+exports.emailVerification = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new Error("Please provide an email address");
+
+    const userEmail = await User.findOne({ email });
+
+    if (userEmail) {
+      throw new AppError("The email is already in use", 400);
+    }
+
+    const verificationCode = generateVerificationCode();
+
+    // Send verification email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.NODEMAILER_USER,
+      to: email,
+      subject: "Email Verification",
+      text: `Your verification code is: ${verificationCode}`,
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Verification code sent to your email",
+      verificationCode: verificationCode, 
+    });
+  } catch (error: any) {
+    console.log(error)
+    res.status(400).json({ message: error.message });
+  }
+};
