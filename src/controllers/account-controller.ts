@@ -11,17 +11,6 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 
-// checck if email esists
-// export const checkEmail = catchAsync(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const { email } = req.body;
-//     const user = await User.findOne({ email });
-//     if (user) {
-//       throw new AppError("The email is already in use", 400);
-//     }
-//     next();
-//   }
-// );
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -303,8 +292,6 @@ exports.emailVerification = async (
       throw new AppError("The email is already in use", 400);
     }
 
-    // await checkEmail(req, res, next);
-    // Generate verification code
     const verificationCode = generateVerificationCode();
 
     // Send verification email
@@ -326,10 +313,10 @@ exports.emailVerification = async (
     res.status(200).json({
       status: "success",
       message: "Verification code sent to your email",
-      verificationCode: verificationCode, // Sending verification code in response (for testing purposes)
+      verificationCode: verificationCode, 
     });
   } catch (error: any) {
-    console.error("Error sending verification email:", error);
+    console.log(error)
     res.status(400).json({ message: error.message });
   }
 };
