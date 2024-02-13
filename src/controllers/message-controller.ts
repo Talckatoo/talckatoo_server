@@ -78,8 +78,6 @@ exports.createMessage = catchAsync(
     const target = targetLanguage ? targetLanguage : "en";
 
     if (media) {
-      console.log(media);
-      console.log("media");
       const message = await Message.create({
         media: media,
         sender: from,
@@ -257,8 +255,11 @@ exports.createVoiceNote = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const form = new multiparty.Form();
 
-    form.parse(req, async (err: any, fields: any, files: any) => {
-      const { to, from } = fields;
+    form.parse(req, async (err: any, fields: any) => {
+      const { to, from, url } = req.body;
+      if (!url) {
+        throw new AppError("Invalid Input. Please try again", 400);
+      }
 
       if (!to || !from) {
         throw new AppError("Invalid Input. Please try again", 400);
@@ -268,40 +269,33 @@ exports.createVoiceNote = catchAsync(
         throw new AppError("You can't send a message to yourself", 403);
       }
 
-      if (files.audio) {
-        const data = await cloudinary.uploader.upload(files.audio[0].path, {
-          resource_type: "video",
-          folder: "voice-notes",
-        });
-        const { public_id, secure_url } = data;
-        const message = await Message.create({
-          voiceNote: { public_id, url: secure_url },
-          sender: from,
+      const message = await Message.create({
+        voiceNote: { url: url },
+        sender: from,
+      });
+
+      let conversation = await Conversation.findOneAndUpdate(
+        { users: { $all: [from, to] } },
+        { $push: { messages: message.id } }
+      );
+
+      if (!conversation) {
+        conversation = await Conversation.create({
+          messages: [message.id],
+          users: [from, to],
         });
 
-        let conversation = await Conversation.findOneAndUpdate(
-          { users: { $all: [from, to] } },
-          { $push: { messages: message.id } }
+        await User.findOneAndUpdate(
+          { _id: from },
+          { $push: { conversations: conversation.id } }
         );
 
-        if (!conversation) {
-          conversation = await Conversation.create({
-            messages: [message.id],
-            users: [from, to],
-          });
-
-          await User.findOneAndUpdate(
-            { _id: from },
-            { $push: { conversations: conversation.id } }
-          );
-
-          await User.findOneAndUpdate(
-            { _id: to },
-            { $push: { conversations: conversation.id } }
-          );
-        }
-        res.status(201).json({ message });
+        await User.findOneAndUpdate(
+          { _id: to },
+          { $push: { conversations: conversation.id } }
+        );
       }
+      res.status(201).json({ message });
     });
   }
 );

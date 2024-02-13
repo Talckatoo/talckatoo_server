@@ -25,7 +25,6 @@ export const uploadMediaService = async (
 
   try {
     const uploadResult = await s3.upload(params).promise();
-    console.log("uploadResult", uploadResult);
     const media = await Media.create({
       type,
       url: uploadResult.Location,
