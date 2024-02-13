@@ -78,8 +78,6 @@ exports.createMessage = catchAsync(
     const target = targetLanguage ? targetLanguage : "en";
 
     if (media) {
-      console.log(media);
-      console.log("media");
       const message = await Message.create({
         media: media,
         sender: from,
@@ -259,9 +257,6 @@ exports.createVoiceNote = catchAsync(
 
     form.parse(req, async (err: any, fields: any) => {
       const { to, from, url } = req.body;
-
-      console.log(to, from, url);
-
       if (!url) {
         throw new AppError("Invalid Input. Please try again", 400);
       }
