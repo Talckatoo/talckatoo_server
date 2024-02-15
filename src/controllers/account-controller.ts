@@ -10,7 +10,7 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
-
+const NewsletterEmail = require('../models/newsLetterEmail-model');
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -313,10 +313,51 @@ exports.emailVerification = async (
     res.status(200).json({
       status: "success",
       message: "Verification code sent to your email",
-      verificationCode: verificationCode, 
+      verificationCode: verificationCode,
     });
   } catch (error: any) {
     console.log(error)
+    res.status(400).json({ message: error.message });
+  }
+};
+
+exports.newsLetter = async (req:Request, res:Response, next:NextFunction) => {
+  try {
+    const { email } = req.body;
+    if (!email) throw new Error("Please provide an email address");
+
+    // Check if the email already exists in the newsletter email collection
+    const existingEmail = await NewsletterEmail.findOne({ email });
+
+    if (existingEmail) {
+      throw new Error("The email is already signed up for the newsletter");
+    }
+
+    // Save the new email address to your newsletter email collection
+    await NewsletterEmail.create({ email });
+
+    // Send verification email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.NODEMAILER_USER,
+        pass: process.env.NODEMAILER_PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: process.env.NODEMAILER_USER,
+      to: email,
+      subject: "Talckatoo Newsletter Subscription",
+      text: `Thank you for signing up to our newsletter!`,
+    });
+
+    res.status(200).json({
+      status: "success",
+      message: "Newsletter sent to your email",
+    });
+  } catch (error: any) {
+    console.error(error);
     res.status(400).json({ message: error.message });
   }
 };

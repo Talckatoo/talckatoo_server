@@ -11,6 +11,7 @@ const {
   loginWithGoogle,
   googleCallback,
   emailVerification,
+  newsLetter,
 } = require("../controllers/account-controller");
 /**
  * @swagger
@@ -98,6 +99,7 @@ router.route("/logout").post(logOut);
 router.route("/loginWithPhone").post(loginWithPhoneNumber);
 
 router.route("/forgot-password").post(forgotPassword);
+router.route("/news-letter").post(newsLetter);
 router.route("/reset-password/:token").post(resetPassword);
 router.route("/loginWithGoogle").get(loginWithGoogle);
 router.route("/auth/google/callback").get(googleCallback);
