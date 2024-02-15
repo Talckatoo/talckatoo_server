@@ -113,7 +113,15 @@ io.on("connection", (socket: Socket) => {
   socket.on("joinRandomChat", async (data: any) => {
     try {
       const { userName, profilePicture, language, id, email } = data;
-      const existingConversation = await RandomConversations.findOneAndUpdate(
+
+      // Prevent self-matching
+      if (id === socket.id) {
+        console.log("User cannot match with themselves.");
+        return;
+      }
+
+      // Find an existing conversation where user2 is null
+      let existingConversation = await RandomConversations.findOneAndUpdate(
         { user2: null },
         {
           user2: {
@@ -127,6 +135,24 @@ io.on("connection", (socket: Socket) => {
         },
         { new: true }
       );
+
+      // If the user is already in a random chat, delete the existing conversation and create a new one
+      if (existingConversation?.user1._id === id) {
+        await RandomConversations.deleteOne({ _id: existingConversation._id });
+        const newConversation = await RandomConversations.create({
+          user1: {
+            userName,
+            profilePicture,
+            language,
+            socketId: socket.id,
+            id,
+            email,
+          },
+        });
+
+        io.to(socket.id).emit("randomResult", newConversation);
+        return;
+      }
 
       if (!existingConversation) {
         // Create a new random conversation if none exists
@@ -145,7 +171,6 @@ io.on("connection", (socket: Socket) => {
       } else {
         // Emit event to the user who joined the random chat
         io.to(socket.id).emit("randomResult", existingConversation);
-
         io.to(existingConversation.user1.socketId).emit(
           "randomResult",
           existingConversation
@@ -184,6 +209,35 @@ io.on("connection", (socket: Socket) => {
     } else {
       io.to(data.socketId).emit("getRandomMessage", data);
       io.to(socket.id).emit("getRandomMessage", data);
+    }
+  });
+
+  socket.on("leaveRandomChat", async (data: any) => {
+    console.log("leaving random chat");
+    console.log(data);
+    try {
+      const { conversationId, socketId } = data;
+
+      if (!conversationId) {
+        return;
+      }
+
+      const conversation = await RandomConversations.findOne({
+        _id: conversationId,
+      });
+
+      if (conversation) {
+        if (conversation.user1.socketId === socketId) {
+          await RandomConversations.deleteOne({ _id: conversationId });
+        } else {
+          await RandomConversations.findOneAndUpdate(
+            { _id: conversationId },
+            { user2: null }
+          );
+        }
+      }
+    } catch (error) {
+      console.error("Error leaving random chat:", error);
     }
   });
 
