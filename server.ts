@@ -213,15 +213,20 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("leaveRandomChat", async (data: any) => {
-    console.log("leaving random chat");
-    console.log(data);
+    const user1 = data?.randomData?.user1;
+    const user2 = data?.randomData?.user2;
+    if (user1 && user2) {
+      io.to(user1.socketId).emit("leaveRandomChat", { message: "Leave call!" });
+      io.to(user2.socketId).emit("leaveRandomChat", { message: "Leave call!" });
+      return;
+    }
+
     try {
       const { conversationId, socketId } = data;
 
       if (!conversationId) {
         return;
       }
-
       const conversation = await RandomConversations.findOne({
         _id: conversationId,
       });
