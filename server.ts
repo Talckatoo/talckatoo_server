@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from "express";
+import e, { Request, Response, NextFunction } from "express";
 
 import { Socket } from "socket.io";
 import { isPromise } from "util/types";
@@ -213,6 +213,7 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("leaveRandomChat", async (data: any) => {
+    console.log("leaveRandomChat", data);
     const user1 = data?.randomData?.user1;
     const user2 = data?.randomData?.user2;
     if (user1 && user2) {
