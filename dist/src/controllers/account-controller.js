@@ -15,16 +15,30 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
-const NewsletterEmail = require('../models/newsLetterEmail-model');
-const path_1 = __importDefault(require("path"));
-const handlebars = require('handlebars');
-const fs = require('fs');
-const templatePath = path_1.default.join(__dirname, '../templates/verification_email.hbs');
-const templatePathRest = path_1.default.join(__dirname, '../templates/password_reset.hbs');
-const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
-const source = fs.readFileSync(templatePath, 'utf8');
-const templateRest = handlebars.compile(sourceRest);
-const template = handlebars.compile(source);
+const NewsletterEmail = require("../models/newsLetterEmail-model");
+const handlebars = require("handlebars");
+const fs = require("fs");
+// const templatePath = path.join(__dirname,'../templates/Verification.hbs');
+// const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
+// const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
+// const source = fs.readFileSync(templatePath, 'utf8');
+// const templateRest = handlebars.compile(sourceRest);
+// const template = handlebars.compile(source);
+const path = require("path");
+// Define the directory containing your templates
+const templatesDir = path.resolve(process.cwd(), "src/templates");
+// Define the filenames of your templates
+const verificationFilename = "verification.hbs";
+const passwordFilename = "password.hbs";
+// Resolve the full paths to the template files
+const verificationPath = path.resolve(templatesDir, verificationFilename);
+const passwordPath = path.resolve(templatesDir, passwordFilename);
+// Read the contents of the template files
+const verificationTemplate = fs.readFileSync(verificationPath, "utf8");
+const passwordTemplate = fs.readFileSync(passwordPath, "utf8");
+// Compile the Handlebars templates
+const compiledVerificationTemplate = handlebars.compile(verificationTemplate);
+const compiledPasswordTemplate = handlebars.compile(passwordTemplate);
 exports.signUp = catchAsync(async (req, res, next) => {
     const { userName, email, password, language } = req.body;
     // check if the email exists
@@ -146,7 +160,10 @@ exports.forgotPassword = catchAsync(async (req, res, next) => {
         },
     });
     // Compile the HTML template with the verification code
-    const html = templateRest({ public_url: process.env.PUBLIC_URL, resetToken });
+    const html = compiledPasswordTemplate({
+        public_url: process.env.PUBLIC_URL,
+        resetToken,
+    });
     transporter.sendMail({
         from: process.env.NODEMAILER_USER, // sender address
         to: email, // list of receivers
@@ -223,7 +240,7 @@ exports.emailVerification = async (req, res, next) => {
         // Generate verification code
         const verificationCode = (0, regenerateVerificationCode_1.default)();
         // Compile the HTML template with the verification code
-        const html = template({ verificationCode });
+        const html = compiledVerificationTemplate({ verificationCode });
         // Send verification email
         const transporter = nodemailer.createTransport({
             service: "gmail",

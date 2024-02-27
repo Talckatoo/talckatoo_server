@@ -1,7 +1,7 @@
 {
-    "name": "bb-practicum-team-2-back",
+    "name": "talckatoo server",
     "version": "1.0.0",
-    "description": "Back-End Repo for Team 2 of Cockatoo/Chimp Practicum",
+    "description": "talckatoo chat app server",
     "main": "app.ts",
     "scripts": {
         "start": "node ./dist/server.js",
