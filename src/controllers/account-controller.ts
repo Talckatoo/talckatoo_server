@@ -24,9 +24,7 @@ const fs = require("fs");
 const path = require("path");
 
 // Define the directory containing your templates
-const templatesDir = path.resolve(process.cwd(), "src/templates");
-
-console.log(templatesDir);
+const templatesDir = path.resolve(process.cwd(), "dist/src/templates");
 
 // Define the filenames of your templates
 const verificationFilename = "verification.hbs";
