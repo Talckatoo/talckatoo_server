@@ -10,9 +10,9 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
-const NewsletterEmail = require('../models/newsLetterEmail-model');
-const handlebars = require('handlebars');
-const fs = require('fs');
+const NewsletterEmail = require("../models/newsLetterEmail-model");
+const handlebars = require("handlebars");
+const fs = require("fs");
 
 // const templatePath = path.join(__dirname,'../templates/Verification.hbs');
 // const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
@@ -21,28 +21,28 @@ const fs = require('fs');
 // const templateRest = handlebars.compile(sourceRest);
 // const template = handlebars.compile(source);
 
-const path = require('path');
+const path = require("path");
 
 // Define the directory containing your templates
-const templatesDir = path.resolve(__dirname, '..', 'templates');
+const templatesDir = path.resolve(process.cwd(), "src/templates");
+
+console.log(templatesDir);
 
 // Define the filenames of your templates
-const verificationFilename = 'Verification.hbs';
-const passwordFilename = 'Password.hbs';
+const verificationFilename = "verification.hbs";
+const passwordFilename = "password.hbs";
 
 // Resolve the full paths to the template files
 const verificationPath = path.resolve(templatesDir, verificationFilename);
 const passwordPath = path.resolve(templatesDir, passwordFilename);
 
 // Read the contents of the template files
-const verificationTemplate = fs.readFileSync(verificationPath, 'utf8');
-const passwordTemplate = fs.readFileSync(passwordPath, 'utf8');
+const verificationTemplate = fs.readFileSync(verificationPath, "utf8");
+const passwordTemplate = fs.readFileSync(passwordPath, "utf8");
 
 // Compile the Handlebars templates
 const compiledVerificationTemplate = handlebars.compile(verificationTemplate);
 const compiledPasswordTemplate = handlebars.compile(passwordTemplate);
-
-
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -222,16 +222,18 @@ exports.forgotPassword = catchAsync(
       },
     });
 
-    
     // Compile the HTML template with the verification code
-    const html = compiledPasswordTemplate({public_url: process.env.PUBLIC_URL ,resetToken }); 
+    const html = compiledPasswordTemplate({
+      public_url: process.env.PUBLIC_URL,
+      resetToken,
+    });
 
     transporter.sendMail(
       {
         from: process.env.NODEMAILER_USER, // sender address
         to: email, // list of receivers
         subject: "Talckatoo Reset Password", // Subject line
-        html:html, // plain text body
+        html: html, // plain text body
       },
       (err: any) => next(new AppError(err.message, 404))
     );
@@ -313,7 +315,11 @@ exports.googleCallback = (req: Request, res: Response, next: NextFunction) => {
   })(req, res, next);
 };
 
-exports.emailVerification = async (req: Request, res: Response, next:NextFunction) => {
+exports.emailVerification = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email } = req.body;
     if (!email) throw new Error("Please provide an email address");
@@ -323,12 +329,12 @@ exports.emailVerification = async (req: Request, res: Response, next:NextFunctio
     if (userEmail) {
       throw new AppError("The email is already in use", 400);
     }
-    
+
     // Generate verification code
     const verificationCode = generateVerificationCode();
 
     // Compile the HTML template with the verification code
-    const html = compiledVerificationTemplate({ verificationCode }); 
+    const html = compiledVerificationTemplate({ verificationCode });
 
     // Send verification email
     const transporter = nodemailer.createTransport({
@@ -357,7 +363,11 @@ exports.emailVerification = async (req: Request, res: Response, next:NextFunctio
   }
 };
 
-exports.newsLetter = async (req:Request, res:Response, next:NextFunction) => {
+exports.newsLetter = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
   try {
     const { email } = req.body;
     if (!email) throw new Error("Please provide an email address");
