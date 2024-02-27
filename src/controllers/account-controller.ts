@@ -12,15 +12,16 @@ const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 const NewsletterEmail = require('../models/newsLetterEmail-model');
 
-// import path from 'path';
-// const handlebars = require('handlebars');
-// const fs = require('fs');
-// const templatePath = path.join(__dirname,'./../emails/email_verification.hbs');
-// const templatePathRest = path.join(__dirname,'./../emails/reset_password.hbs');
-// const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
-// const source = fs.readFileSync(templatePath, 'utf8');
-// const templateRest = handlebars.compile(sourceRest);
-// const template = handlebars.compile(source);
+import path from 'path';
+const handlebars = require('handlebars');
+const fs = require('fs');
+
+const templatePath = path.join(__dirname, '../templates/verification_email.hbs'); 
+const templatePathRest = path.join(__dirname,'../templates/password_reset.hbs');
+const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
+const source = fs.readFileSync(templatePath, 'utf8');
+const templateRest = handlebars.compile(sourceRest);
+const template = handlebars.compile(source);
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -202,15 +203,14 @@ exports.forgotPassword = catchAsync(
 
     
     // Compile the HTML template with the verification code
-    // const html = templateRest({public_url: process.env.PUBLIC_URL ,resetToken }); 
+    const html = templateRest({public_url: process.env.PUBLIC_URL ,resetToken }); 
 
     transporter.sendMail(
       {
         from: process.env.NODEMAILER_USER, // sender address
         to: email, // list of receivers
         subject: "Talckatoo Reset Password", // Subject line
-        // html:html, // plain text body
-        text: `You are receiving this because you (or someone else) ${resetToken} has requested the reset of the password for your account.\n\n`
+        html:html, // plain text body
       },
       (err: any) => next(new AppError(err.message, 404))
     );
@@ -307,7 +307,7 @@ exports.emailVerification = async (req: Request, res: Response, next:NextFunctio
     const verificationCode = generateVerificationCode();
 
     // Compile the HTML template with the verification code
-    // const html = template({ verificationCode }); 
+    const html = template({ verificationCode }); 
 
     // Send verification email
     const transporter = nodemailer.createTransport({
@@ -322,8 +322,7 @@ exports.emailVerification = async (req: Request, res: Response, next:NextFunctio
       from: process.env.NODEMAILER_USER,
       to: email,
       subject: "Email Verification",
-      // html: html, // Use the compiled HTML template
-      text: `Your verification code is ${verificationCode}`,
+      html: html, // Use the compiled HTML template
     });
 
     res.status(200).json({
