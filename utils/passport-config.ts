@@ -62,8 +62,6 @@ passport.use(
         if (existingUser) {
           return done(null, existingUser);
         }
-
-        console.log(profile, "This is the profile");
         // Create a new user with Google profile information
         const newUser = await User.create({
           userName: profile.displayName,
