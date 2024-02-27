@@ -10,16 +10,6 @@ const axios = require("axios");
 const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
-const NewsletterEmail = require('../models/newsLetterEmail-model');
-import path from 'path';
-const handlebars = require('handlebars');
-const fs = require('fs');
-const templatePath = path.join(__dirname,'../../emails/verification_email.hbs');
-const templatePathRest = path.join(__dirname,'../../emails/password_reset.hbs');
-const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
-const source = fs.readFileSync(templatePath, 'utf8');
-const templateRest = handlebars.compile(sourceRest);
-const template = handlebars.compile(source);
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -326,48 +316,7 @@ exports.emailVerification = async (req: Request, res: Response, next:NextFunctio
     res.status(200).json({
       status: "success",
       message: "Verification code sent to your email",
-      verificationCode: verificationCode,
-    });
-  } catch (error: any) {
-    console.error(error);
-    res.status(400).json({ message: error.message });
-  }
-};
-
-exports.newsLetter = async (req:Request, res:Response, next:NextFunction) => {
-  try {
-    const { email } = req.body;
-    if (!email) throw new Error("Please provide an email address");
-
-    // Check if the email already exists in the newsletter email collection
-    const existingEmail = await NewsletterEmail.findOne({ email });
-
-    if (existingEmail) {
-      throw new Error("The email is already signed up for the newsletter");
-    }
-
-    // Save the new email address to your newsletter email collection
-    await NewsletterEmail.create({ email });
-
-    // Send verification email
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.NODEMAILER_USER,
-        pass: process.env.NODEMAILER_PASSWORD,
-      },
-    });
-
-    await transporter.sendMail({
-      from: process.env.NODEMAILER_USER,
-      to: email,
-      subject: "Talckatoo Newsletter Subscription",
-      text: `Thank you for signing up to our newsletter!`,
-    });
-
-    res.status(200).json({
-      status: "success",
-      message: "Newsletter sent to your email",
+      verificationCode: verificationCode, 
     });
   } catch (error: any) {
     console.error(error);
