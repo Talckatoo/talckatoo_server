@@ -11,6 +11,15 @@ const nodemailer = require("nodemailer");
 const crypto = require("crypto");
 const mailConstructor = require("../../utils/mail-constructor");
 const NewsletterEmail = require('../models/newsLetterEmail-model');
+import path from 'path';
+const handlebars = require('handlebars');
+const fs = require('fs');
+const templatePath = path.join(__dirname,'../../emails/verification_email.hbs');
+const templatePathRest = path.join(__dirname,'../../emails/password_reset.hbs');
+const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
+const source = fs.readFileSync(templatePath, 'utf8');
+const templateRest = handlebars.compile(sourceRest);
+const template = handlebars.compile(source);
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -190,12 +199,16 @@ exports.forgotPassword = catchAsync(
       },
     });
 
+    
+    // Compile the HTML template with the verification code
+    const html = templateRest({public_url: process.env.PUBLIC_URL ,resetToken }); 
+
     transporter.sendMail(
       {
         from: process.env.NODEMAILER_USER, // sender address
         to: email, // list of receivers
         subject: "Talckatoo Reset Password", // Subject line
-        text: `Click the following link to reset your password: ${process.env.PUBLIC_URL}/reset-password/${resetToken}`,
+        html:html, // plain text body
       },
       (err: any) => next(new AppError(err.message, 404))
     );
@@ -277,11 +290,7 @@ exports.googleCallback = (req: Request, res: Response, next: NextFunction) => {
   })(req, res, next);
 };
 
-exports.emailVerification = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
+exports.emailVerification = async (req: Request, res: Response, next:NextFunction) => {
   try {
     const { email } = req.body;
     if (!email) throw new Error("Please provide an email address");
@@ -291,8 +300,12 @@ exports.emailVerification = async (
     if (userEmail) {
       throw new AppError("The email is already in use", 400);
     }
-
+    
+    // Generate verification code
     const verificationCode = generateVerificationCode();
+
+    // Compile the HTML template with the verification code
+    const html = template({ verificationCode }); 
 
     // Send verification email
     const transporter = nodemailer.createTransport({
@@ -307,7 +320,7 @@ exports.emailVerification = async (
       from: process.env.NODEMAILER_USER,
       to: email,
       subject: "Email Verification",
-      text: `Your verification code is: ${verificationCode}`,
+      html: html, // Use the compiled HTML template
     });
 
     res.status(200).json({
@@ -316,7 +329,7 @@ exports.emailVerification = async (
       verificationCode: verificationCode,
     });
   } catch (error: any) {
-    console.log(error)
+    console.error(error);
     res.status(400).json({ message: error.message });
   }
 };
