@@ -16,12 +16,32 @@ import path from 'path';
 const handlebars = require('handlebars');
 const fs = require('fs');
 
-const templatePath = path.join(__dirname,'../templates/Verification.hbs');
-const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
-const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
-const source = fs.readFileSync(templatePath, 'utf8');
-const templateRest = handlebars.compile(sourceRest);
-const template = handlebars.compile(source);
+// const templatePath = path.join(__dirname,'../templates/Verification.hbs');
+// const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
+// const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
+// const source = fs.readFileSync(templatePath, 'utf8');
+// const templateRest = handlebars.compile(sourceRest);
+// const template = handlebars.compile(source);
+
+// Define a base directory for your templates
+const templatesBaseDir = path.join(__dirname, '../templates');
+
+// Define specific template filenames
+const verificationTemplateFile = 'Verification.hbs';
+const passwordTemplateFile = 'Password.hbs';
+
+// Construct the full paths to the templates
+const verificationTemplatePath = path.join(templatesBaseDir, verificationTemplateFile);
+const passwordTemplatePath = path.join(templatesBaseDir, passwordTemplateFile);
+
+// Read the contents of the template files
+const verificationSource = fs.readFileSync(verificationTemplatePath, 'utf8');
+const passwordSource = fs.readFileSync(passwordTemplatePath, 'utf8');
+
+// Compile the Handlebars templates
+const verificationTemplate = handlebars.compile(verificationSource);
+const passwordTemplate = handlebars.compile(passwordSource);
+
 
 exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -203,7 +223,7 @@ exports.forgotPassword = catchAsync(
 
     
     // Compile the HTML template with the verification code
-    const html = templateRest({public_url: process.env.PUBLIC_URL ,resetToken }); 
+    const html = passwordTemplate({public_url: process.env.PUBLIC_URL ,resetToken }); 
 
     transporter.sendMail(
       {
@@ -307,7 +327,7 @@ exports.emailVerification = async (req: Request, res: Response, next:NextFunctio
     const verificationCode = generateVerificationCode();
 
     // Compile the HTML template with the verification code
-    const html = template({ verificationCode }); 
+    const html = verificationTemplate({ verificationCode }); 
 
     // Send verification email
     const transporter = nodemailer.createTransport({
