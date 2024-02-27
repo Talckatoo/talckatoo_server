@@ -16,8 +16,8 @@ import path from 'path';
 const handlebars = require('handlebars');
 const fs = require('fs');
 
-const templatePath = path.join(__dirname, '../templates/verification_email.hbs'); 
-const templatePathRest = path.join(__dirname,'../templates/password_reset.hbs');
+const templatePath = path.join(__dirname, '../templates/Verification.hbs'); 
+const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
 const sourceRest = fs.readFileSync(templatePathRest, 'utf8');
 const source = fs.readFileSync(templatePath, 'utf8');
 const templateRest = handlebars.compile(sourceRest);
