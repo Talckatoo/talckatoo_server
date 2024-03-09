@@ -1,4 +1,4 @@
-import e, { Request, Response, NextFunction } from "express";
+import { Request, Response, NextFunction } from "express";
 
 import { Socket } from "socket.io";
 import { isPromise } from "util/types";
@@ -116,7 +116,6 @@ io.on("connection", (socket: Socket) => {
 
       // Prevent self-matching
       if (id === socket.id) {
-        console.log("User cannot match with themselves.");
         return;
       }
 
@@ -213,7 +212,6 @@ io.on("connection", (socket: Socket) => {
   });
 
   socket.on("leaveRandomChat", async (data: any) => {
-    console.log("leaveRandomChat", data);
     const user1 = data?.randomData?.user1;
     const user2 = data?.randomData?.user2;
     if (user1 && user2) {
@@ -243,7 +241,7 @@ io.on("connection", (socket: Socket) => {
         }
       }
     } catch (error) {
-      console.error("Error leaving random chat:", error);
+      console.log("Error leaving random chat:", error);
     }
   });
 
