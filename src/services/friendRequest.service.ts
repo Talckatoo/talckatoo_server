@@ -85,6 +85,23 @@ export const sendFriendRequestService = async (
     .populate("to", "userName")
     .exec();
 
+  // step 7: create a conversation between the two users
+  const conversation = await Conversation.create({
+    users: [friendRequest.from, friendRequest.to],
+    unread: [friendRequest.to],
+  });
+  // add the conversation to the users' conversations array
+  await User.updateOne(
+    { _id: friendRequest.from },
+    { $push: { conversations: conversation._id } }
+  );
+
+  await User.updateOne(
+    { _id: friendRequest.to },
+    { $push: { conversations: conversation._id } }
+  );
+
+  // Step 8: Return Success Message
   return {
     message: "Friend request sent successfully",
     friendRequest: friendRequestData,
@@ -164,7 +181,7 @@ export const handleFriendRequestResponseService = async (
   }
 
   // get the user data from and to
-  const fromUser = await User.findById(friendRequest.from);
+  let fromUser = await User.findById(friendRequest.from);
   const toUser = await User.findById(friendRequest.to);
 
   // step5: return a message indicating the result of the operation
