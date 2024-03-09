@@ -138,9 +138,9 @@ export const getFriends = async (
       if (conversation) {
         last = conversation.messages.pop();
 
-        if (last.message && last) {
+        if (last?.message && last) {
           latestMessage = last.message;
-        } else if (last.voiceNote) {
+        } else if (last?.voiceNote) {
           latestMessage = "voiceNote";
         }
       }
