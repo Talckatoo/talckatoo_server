@@ -114,29 +114,50 @@ io.on("connection", (socket: Socket) => {
     try {
       const { userName, profilePicture, language, id, email } = data;
 
-      // Prevent self-matching
-      if (id === socket.id) {
+      // Find an existing conversation where user2 is null
+      let existingConversation = await RandomConversations.findOne({
+        user2: null,
+      });
+
+      console.log("existingConversation", existingConversation);
+
+      if (existingConversation && existingConversation?.user1?.id !== id) {
+        console.log("already exists");
+        // update the user2 field in the existing conversation
+        const newConversation = await RandomConversations.findOneAndUpdate(
+          { user2: null },
+          {
+            user2: {
+              userName,
+              profilePicture,
+              language,
+              socketId: socket.id,
+              id,
+              email,
+            },
+          },
+          { new: true }
+        );
+
+        console.log("socket.id", socket.id);
+        console.log(
+          "existingConversation from inside userID",
+          existingConversation.user1.socketId
+        );
+        // Emit event to the user who joined the random chat
+        io.to(socket.id).emit("randomResult", newConversation);
+        io.to(existingConversation.user1.socketId).emit(
+          "randomResult",
+          newConversation
+        );
+        await RandomConversations.deleteOne({ _id: existingConversation._id });
+
         return;
       }
 
-      // Find an existing conversation where user2 is null
-      let existingConversation = await RandomConversations.findOneAndUpdate(
-        { user2: null },
-        {
-          user2: {
-            userName,
-            profilePicture,
-            language,
-            id,
-            email,
-            socketId: socket.id,
-          },
-        },
-        { new: true }
-      );
-
       // If the user is already in a random chat, delete the existing conversation and create a new one
       if (existingConversation?.user1._id === id) {
+        console.log("already exists1");
         await RandomConversations.deleteOne({ _id: existingConversation._id });
         const newConversation = await RandomConversations.create({
           user1: {
@@ -167,16 +188,6 @@ io.on("connection", (socket: Socket) => {
         });
 
         io.to(socket.id).emit("randomResult", newConversation);
-      } else {
-        // Emit event to the user who joined the random chat
-        io.to(socket.id).emit("randomResult", existingConversation);
-        io.to(existingConversation.user1.socketId).emit(
-          "randomResult",
-          existingConversation
-        );
-
-        // Delete the existing conversation
-        await RandomConversations.deleteOne({ _id: existingConversation._id });
       }
     } catch (error) {
       console.error("Error joining random chat:", error);
