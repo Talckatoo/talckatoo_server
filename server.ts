@@ -319,10 +319,14 @@ io.on("connection", (socket: Socket) => {
     if (toFront) {
       io.to(onlineUsers.get(to)).emit("getMessage", {
         messageReply,
+        from: from,
+        to: to,
         sender: "AI Assistant",
       });
       io.to(onlineUsers.get(from)).emit("getMessage", {
         messageReply,
+        from: to,
+        to: from,
         sender: "AI Assistant",
       });
     } else {
