@@ -405,3 +405,29 @@ exports.newsLetter = async (
     res.status(400).json({ message: error.message });
   }
 };
+
+// Delete account contorller
+
+exports.deleteAccount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+
+    if (!email) {
+      throw new AppError("Please provide an email address", 400);
+    } else {
+      const user = await User.findOneAndDelete({
+        email,
+      });
+
+      if (!user) {
+        throw new AppError("A user with this Emai does not exist", 400);
+      } else {
+        res.status(200).json({
+          status: "success",
+          message: "User deleted successfully",
+        });
+      }
+    }
+  }
+);
+
