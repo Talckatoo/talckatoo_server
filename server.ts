@@ -325,8 +325,8 @@ io.on("connection", (socket: Socket) => {
       });
       io.to(onlineUsers.get(from)).emit("getMessage", {
         messageReply,
-        from: to,
-        to: from,
+        from: from,
+        to: to,
         sender: "AI Assistant",
       });
     } else {
