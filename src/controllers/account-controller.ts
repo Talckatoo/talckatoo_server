@@ -46,12 +46,23 @@ exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
 
+    // email to lower case 
+    const emailLower = email.toLowerCase();
+
+
     // check if the email exists
-    const userEmail = await User.findOne({ email });
+    const userEmail = await User.findOne({ email: emailLower, deleted: false});
 
     if (userEmail) {
       throw new AppError("The email is already in use", 400);
     }
+
+     // Check if the email exists and is soft deleted
+     const softDeletedUser = await User.findOne({ email: emailLower, delete: true });
+
+      if (softDeletedUser) {
+        throw new AppError("The email has already been used to create an account before! please use another email", 400);
+      }
 
     if (!userName || !email || !password) {
       throw new AppError(
@@ -110,15 +121,23 @@ exports.logIn = catchAsync(
       );
     }
 
-    const user = await User.findOne({ email }).populate({
+    // checking if user got Softdeleted == flase
+
+    const user = await User.findOne({ email, deleted: false }).populate({
       path: "friends",
       select: "userName profileImage language",
     });
+
+    
 
     if (!user) {
       throw new AppError(" The user for this email could not be found.", 400);
     }
 
+    if(user.deleted) {
+      throw new AppError("This account has been deleted", 400);
+    }
+    
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
@@ -415,10 +434,9 @@ exports.deleteAccount = catchAsync(
     if (!email) {
       throw new AppError("Please provide an email address", 400);
     } else {
-      const user = await User.findOneAndDelete({
-        email,
-      });
-
+    
+      const user = await User.findOneAndUpdate({ email }, { $set: { deleted: true } });
+      
       if (!user) {
         throw new AppError("A user with this Emai does not exist", 400);
       } else {

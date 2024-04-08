@@ -105,7 +105,7 @@ router.route("/reset-password/:token").post(resetPassword);
 router.route("/loginWithGoogle").get(loginWithGoogle);
 router.route("/auth/google/callback").get(googleCallback);
 router.route("/emailVerification").post(emailVerification);
-router.route("/delete-account").delete(deleteAccount);
+router.route("/delete-account").post(deleteAccount);
 
 export {};
 module.exports = router;
