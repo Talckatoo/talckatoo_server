@@ -111,44 +111,102 @@ exports.signUp = catchAsync(
   }
 );
 
-exports.logIn = catchAsync(
+// exports.logIn = catchAsync(
+//   async (req: Request, res: Response, next: NextFunction) => {
+//     const { email, password } = req.body;
+//     if (!email || !password) {
+//       throw new AppError(
+//         "Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.",
+//         400
+//       );
+//     }
+
+//     // checking if user got Softdeleted == flase
+//     // for old user who don't have the delete property in there schema
+
+    
+//     const user = await User.findOne({ email, deleted: false }).populate({
+//       path: "friends",
+//       select: "userName profileImage language",
+//     });
+
+    
+
+//     if (!user) {
+//       throw new AppError(" The user for this email could not be found.", 400);
+//     }
+
+//     if(user.deleted) {
+//       throw new AppError("This account has been deleted", 400);
+//     }
+    
+//     const isMatch = await user.comparePassword(password);
+
+//     if (!isMatch) {
+//       throw new AppError("The password or username is wrong", 400);
+//     }
+
+//     const token = user.createJWT();
+
+//     res.status(200).json({
+//       msg: "User successfully authenticated",
+//       success: "login",
+//       token,
+//       user,
+//     });
+//   }
+// );
+
+export const logIn = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
+
     if (!email || !password) {
-      throw new AppError(
-        "Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.",
+      return next(new AppError(
+        "Please ensure both email and password are included in your submission.",
         400
-      );
+      ));
     }
 
-    // checking if user got Softdeleted == flase
+    // Convert email to lowercase
+    const emailLower = email.toLowerCase();
 
-    const user = await User.findOne({ email, deleted: false }).populate({
+    // Attempt to find a user by email
+    const user = await User.findOne({ email: emailLower }).populate({
       path: "friends",
       select: "userName profileImage language",
     });
 
-    
-
+    // If no user is found
     if (!user) {
-      throw new AppError(" The user for this email could not be found.", 400);
+      return next(new AppError("The user for this email could not be found.", 400));
     }
 
-    if(user.deleted) {
-      throw new AppError("This account has been deleted", 400);
+    // Check if the user has the 'deleted' property
+    if (user.deleted === undefined) {
+      // Add 'deleted' property to the user document
+      user.deleted = false;
+      await user.save(); // Save the updated user document
     }
-    
+
+    // If the user is marked as deleted
+    if (user.deleted) {
+      return next(new AppError("This account has been deleted.", 400));
+    }
+
+    // Check if the provided password matches the user's password
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      throw new AppError("The password or username is wrong", 400);
+      return next(new AppError("The provided credentials are incorrect.", 400));
     }
 
+    // Generate JWT token
     const token = user.createJWT();
 
+    // Send success response
     res.status(200).json({
-      msg: "User successfully authenticated",
-      success: "login",
+      message: "User successfully authenticated",
       token,
       user,
     });
@@ -429,6 +487,12 @@ exports.newsLetter = async (
 
 exports.deleteAccount = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
+
+     // Assuming req.user is set after successful authentication
+    // if(!req.user) {
+    //   throw new AppError("Please login to delete your account", 400);
+    // }
+    
     const { email } = req.body;
 
     if (!email) {
