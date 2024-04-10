@@ -13,6 +13,7 @@ const mailConstructor = require("../../utils/mail-constructor");
 const NewsletterEmail = require("../models/newsLetterEmail-model");
 const handlebars = require("handlebars");
 const fs = require("fs");
+const CryptoJS = require('crypto-js');
 
 // const templatePath = path.join(__dirname,'../templates/Verification.hbs');
 // const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
@@ -408,6 +409,13 @@ exports.emailVerification = async (
     // Generate verification code
     const verificationCode = generateVerificationCode();
 
+    // encrypt verification code
+    const secretKey = process.env.ENCRYPTION_KEY; // Keep this secret!
+    const encryptedVerificationCode = CryptoJS.AES.encrypt(
+      verificationCode,
+      secretKey
+    ).toString();
+
     // Compile the HTML template with the verification code
     const html = compiledVerificationTemplate({ verificationCode });
 
@@ -430,7 +438,7 @@ exports.emailVerification = async (
     res.status(200).json({
       status: "success",
       message: "Verification code sent to your email",
-      verificationCode: verificationCode,
+      verificationCode: encryptedVerificationCode,
     });
   } catch (error: any) {
     console.error(error);
