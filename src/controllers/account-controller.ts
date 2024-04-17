@@ -52,18 +52,18 @@ exports.signUp = catchAsync(
 
 
     // check if the email exists
-    const userEmail = await User.findOne({ email: emailLower, deleted: false});
+    const userEmail = await User.findOne({ email: emailLower, deleted: false });
 
     if (userEmail) {
       throw new AppError("The email is already in use", 400);
     }
 
-     // Check if the email exists and is soft deleted
-     const softDeletedUser = await User.findOne({ email: emailLower, delete: true });
+    // Check if the email exists and is soft deleted
+    const softDeletedUser = await User.findOne({ email: emailLower, delete: true });
 
-      if (softDeletedUser) {
-        throw new AppError("The email has already been used to create an account before! please use another email", 400);
-      }
+    if (softDeletedUser) {
+      throw new AppError("The email has already been used to create an account before! please use another email", 400);
+    }
 
     if (!userName || !email || !password) {
       throw new AppError(
@@ -112,51 +112,6 @@ exports.signUp = catchAsync(
   }
 );
 
-// exports.logIn = catchAsync(
-//   async (req: Request, res: Response, next: NextFunction) => {
-//     const { email, password } = req.body;
-//     if (!email || !password) {
-//       throw new AppError(
-//         "Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.",
-//         400
-//       );
-//     }
-
-//     // checking if user got Softdeleted == flase
-//     // for old user who don't have the delete property in there schema
-
-    
-//     const user = await User.findOne({ email, deleted: false }).populate({
-//       path: "friends",
-//       select: "userName profileImage language",
-//     });
-
-    
-
-//     if (!user) {
-//       throw new AppError(" The user for this email could not be found.", 400);
-//     }
-
-//     if(user.deleted) {
-//       throw new AppError("This account has been deleted", 400);
-//     }
-    
-//     const isMatch = await user.comparePassword(password);
-
-//     if (!isMatch) {
-//       throw new AppError("The password or username is wrong", 400);
-//     }
-
-//     const token = user.createJWT();
-
-//     res.status(200).json({
-//       msg: "User successfully authenticated",
-//       success: "login",
-//       token,
-//       user,
-//     });
-//   }
-// );
 
 export const logIn = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -408,14 +363,23 @@ exports.emailVerification = async (
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
+    console.log(verificationCode)
+    const encryptVerificationCodeFunc = (verificationCode: string, key: any, iv: any) => {
+      try {
+        const encrypted = CryptoJS.AES.encrypt(verificationCode, key, { iv: iv });
+        return encrypted.toString();
+      } catch (error) {
+        // Handle encryption errors
+        console.error("Encryption error:", error);
+        throw new Error("Encryption failed");
+      }
+    }
 
     // encrypt verification code
     const secretKey = process.env.ENCRYPTION_KEY; // Keep this secret!
-    const encryptedVerificationCode = CryptoJS.AES.encrypt(
-      verificationCode,
-      secretKey
-    ).toString();
-
+    const iv = process.env.ENCRYPTION_IV; // iv signature
+    const encryptedVerificationCode = encryptVerificationCodeFunc(verificationCode, secretKey, iv);
+    
     // Compile the HTML template with the verification code
     const html = compiledVerificationTemplate({ verificationCode });
 
@@ -496,19 +460,19 @@ exports.newsLetter = async (
 exports.deleteAccount = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
 
-     // Assuming req.user is set after successful authentication
+    // Assuming req.user is set after successful authentication
     // if(!req.user) {
     //   throw new AppError("Please login to delete your account", 400);
     // }
-    
+
     const { email } = req.body;
 
     if (!email) {
       throw new AppError("Please provide an email address", 400);
     } else {
-    
+
       const user = await User.findOneAndUpdate({ email }, { $set: { deleted: true } });
-      
+
       if (!user) {
         throw new AppError("A user with this Emai does not exist", 400);
       } else {
