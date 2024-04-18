@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import getTranslation from "../../utils/translator-api";
 import generateVerificationCode from "../../utils/regenerateVerificationCode";
+import { Body, Redirect } from "twilio/lib/twiml/MessagingResponse";
+import { set } from "mongoose";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
 const passport = require("../../utils/passport-config");
@@ -327,6 +329,12 @@ exports.googleCallback = (req: Request, res: Response, next: NextFunction) => {
     if (!user) {
       return next(new AppError("Authentication failed", 400));
     }
+
+    // Check if user exists and if their account is soft deleted
+    if (user.deleted) {
+      return res.redirect(`${process.env.CLIENT_URL}`);
+    }
+        
     const token = user.createJWT();
     // code user data
     const userData = {
@@ -363,7 +371,6 @@ exports.emailVerification = async (
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
-    console.log(verificationCode)
     const encryptVerificationCodeFunc = (verificationCode: string, key: any, iv: any) => {
       try {
         const encrypted = CryptoJS.AES.encrypt(verificationCode, key, { iv: iv });
@@ -379,7 +386,7 @@ exports.emailVerification = async (
     const secretKey = process.env.ENCRYPTION_KEY; // Keep this secret!
     const iv = process.env.ENCRYPTION_IV; // iv signature
     const encryptedVerificationCode = encryptVerificationCodeFunc(verificationCode, secretKey, iv);
-    
+
     // Compile the HTML template with the verification code
     const html = compiledVerificationTemplate({ verificationCode });
 
@@ -459,11 +466,6 @@ exports.newsLetter = async (
 
 exports.deleteAccount = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
-
-    // Assuming req.user is set after successful authentication
-    // if(!req.user) {
-    //   throw new AppError("Please login to delete your account", 400);
-    // }
 
     const { email } = req.body;
 
