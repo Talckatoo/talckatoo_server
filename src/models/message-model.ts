@@ -43,6 +43,9 @@ const messageSchema = new Schema<Imessage>(
   { timestamps: true }
 );
 
+// todo: handle encryption/decryption of messages
+// through pre and post fetch
+
 const Message = model<Imessage>("Message", messageSchema);
 
 export {};

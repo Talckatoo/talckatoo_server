@@ -36,6 +36,9 @@ const conversationSchema = new Schema<Iconversation>(
   { timestamps: true }
 );
 
+// todo: handle encryption/decryption of messages
+// through pre and post fetch for every converstaion
+
 const Conversation = model<Iconversation>("Conversation", conversationSchema);
 
 export {};

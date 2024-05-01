@@ -1,5 +1,8 @@
 // classes from mongoose
-import { Schema, model } from "mongoose";
+import { Schema, model, Document } from "mongoose";
+import { generateUserKeys } from "../../utils/signal-helper";
+import { UserKey } from "./userKey-model";
+import { sign } from "crypto";
 
 //import jwt to create tokens for user
 const jwt = require("jsonwebtoken");
@@ -30,6 +33,8 @@ export interface Iuser {
   passwordResetTokenExpires: Date;
   dateBirth: String;
   profile?: String;
+
+  generateAndStoreKeys(): Promise<void>;
 }
 
 //user schema
@@ -103,6 +108,48 @@ UserSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
+});
+
+UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
+  const userId = this._id;
+
+  // Generate user keys
+  const { registrationId, identityKeyPair, preKey, signedPreKey } =
+    await generateUserKeys();
+
+  // Store user keys in the userKey collection
+  await UserKey.create({
+    userId,
+    registrationId,
+    identityKeyPair: {
+      pubKey: Buffer.from(identityKeyPair.pubKey),
+      privKey: Buffer.from(identityKeyPair.privKey),
+    },
+    preKey: {
+      keyId: preKey.keyId,
+      keyPair: {
+        pubKey: Buffer.from(preKey.keyPair.pubKey),
+        privKey: Buffer.from(preKey.keyPair.privKey),
+      },
+    },
+    signedPreKey: {
+      keyId: signedPreKey.keyId,
+      keyPair: {
+        pubKey: Buffer.from(signedPreKey.keyPair.pubKey),
+        privKey: Buffer.from(signedPreKey.keyPair.privKey),
+      },
+      signature: Buffer.from(signedPreKey.signature),
+    },
+  });
+};
+
+UserSchema.post("save", async function (doc: Iuser, next: Function) {
+  try {
+    await doc.generateAndStoreKeys();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 UserSchema.methods.createJWT = function () {
