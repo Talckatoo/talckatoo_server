@@ -10,6 +10,9 @@ const multiparty = require("multiparty");
 const fs = require("fs");
 const axios = require("axios");
 
+import { encryptMessage } from "../../utils/signal-crypto";
+import { SignalProtocolStore } from "../../utils/signal-store";
+
 exports.getConversations = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const conversations = await Conversation.find({});
@@ -130,6 +133,10 @@ exports.createMessage = catchAsync(
     const translate = `\n${response[0]?.text}`;
 
     if (!voiceToVoice) {
+      const unsealed = text + translate;
+      const store = new SignalProtocolStore();
+      const sealed = await encryptMessage(from, unsealed, store);
+
       const message = await Message.create({
         message: text + translate,
         sender: from,

@@ -2,20 +2,20 @@ import { Schema, model } from "mongoose";
 
 export interface IUserKey {
   userId: String;
-  registrationId: Number;
+  registrationId: number;
   identityKeyPair: {
     pubKey: Buffer;
     privKey: Buffer;
   };
   preKey: {
-    keyId: Number;
+    keyId: number;
     keyPair: {
       pubKey: Buffer;
       privKey: Buffer;
     };
   };
   signedPreKey: {
-    keyId: Number;
+    keyId: number;
     keyPair: {
       pubKey: Buffer;
       privKey: Buffer;
