@@ -1,6 +1,8 @@
 import { Request, Response, NextFunction } from "express";
 import getTranslation from "../../utils/translator-api";
 import generateVerificationCode from "../../utils/regenerateVerificationCode";
+import { Body, Redirect } from "twilio/lib/twiml/MessagingResponse";
+import { set } from "mongoose";
 const User = require("../models/user-model");
 const catchAsync = require("../../utils/catch-async");
 const passport = require("../../utils/passport-config");
@@ -13,6 +15,7 @@ const mailConstructor = require("../../utils/mail-constructor");
 const NewsletterEmail = require("../models/newsLetterEmail-model");
 const handlebars = require("handlebars");
 const fs = require("fs");
+const CryptoJS = require('crypto-js');
 
 // const templatePath = path.join(__dirname,'../templates/Verification.hbs');
 // const templatePathRest = path.join(__dirname,'../templates/Password.hbs');
@@ -46,11 +49,22 @@ exports.signUp = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { userName, email, password, language } = req.body;
 
+    // email to lower case 
+    const emailLower = email.toLowerCase();
+
+
     // check if the email exists
-    const userEmail = await User.findOne({ email });
+    const userEmail = await User.findOne({ email: emailLower, deleted: false });
 
     if (userEmail) {
       throw new AppError("The email is already in use", 400);
+    }
+
+    // Check if the email exists and is soft deleted
+    const softDeletedUser = await User.findOne({ email: emailLower, delete: true });
+
+    if (softDeletedUser) {
+      throw new AppError("The email has already been used to create an account before! please use another email", 400);
     }
 
     if (!userName || !email || !password) {
@@ -100,36 +114,57 @@ exports.signUp = catchAsync(
   }
 );
 
-exports.logIn = catchAsync(
+
+export const logIn = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
+
     if (!email || !password) {
-      throw new AppError(
-        "Either the email or the password are missing completely from this submission. Please check to make sure and email and a password are included in your submission.",
+      return next(new AppError(
+        "Please ensure both email and password are included in your submission.",
         400
-      );
+      ));
     }
 
-    const user = await User.findOne({ email }).populate({
+    // Convert email to lowercase
+    const emailLower = email.toLowerCase();
+
+    // Attempt to find a user by email
+    const user = await User.findOne({ email: emailLower }).populate({
       path: "friends",
       select: "userName profileImage language",
     });
 
+    // If no user is found
     if (!user) {
-      throw new AppError(" The user for this email could not be found.", 400);
+      return next(new AppError("The user for this email could not be found.", 400));
     }
 
+    // Check if the user has the 'deleted' property
+    if (user.deleted === undefined) {
+      // Add 'deleted' property to the user document
+      user.deleted = false;
+      await user.save(); // Save the updated user document
+    }
+
+    // If the user is marked as deleted
+    if (user.deleted) {
+      return next(new AppError("This account has been deleted.", 400));
+    }
+
+    // Check if the provided password matches the user's password
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
-      throw new AppError("The password or username is wrong", 400);
+      return next(new AppError("The provided credentials are incorrect.", 400));
     }
 
+    // Generate JWT token
     const token = user.createJWT();
 
+    // Send success response
     res.status(200).json({
-      msg: "User successfully authenticated",
-      success: "login",
+      message: "User successfully authenticated",
       token,
       user,
     });
@@ -294,6 +329,12 @@ exports.googleCallback = (req: Request, res: Response, next: NextFunction) => {
     if (!user) {
       return next(new AppError("Authentication failed", 400));
     }
+
+    // Check if user exists and if their account is soft deleted
+    if (user.deleted) {
+      return res.redirect(`${process.env.CLIENT_URL}`);
+    }
+        
     const token = user.createJWT();
     // code user data
     const userData = {
@@ -330,6 +371,21 @@ exports.emailVerification = async (
 
     // Generate verification code
     const verificationCode = generateVerificationCode();
+    const encryptVerificationCodeFunc = (verificationCode: string, key: any, iv: any) => {
+      try {
+        const encrypted = CryptoJS.AES.encrypt(verificationCode, key, { iv: iv });
+        return encrypted.toString();
+      } catch (error) {
+        // Handle encryption errors
+        console.error("Encryption error:", error);
+        throw new Error("Encryption failed");
+      }
+    }
+
+    // encrypt verification code
+    const secretKey = process.env.ENCRYPTION_KEY; // Keep this secret!
+    const iv = process.env.ENCRYPTION_IV; // iv signature
+    const encryptedVerificationCode = encryptVerificationCodeFunc(verificationCode, secretKey, iv);
 
     // Compile the HTML template with the verification code
     const html = compiledVerificationTemplate({ verificationCode });
@@ -353,7 +409,7 @@ exports.emailVerification = async (
     res.status(200).json({
       status: "success",
       message: "Verification code sent to your email",
-      verificationCode: verificationCode,
+      verificationCode: encryptedVerificationCode,
     });
   } catch (error: any) {
     console.error(error);
@@ -405,3 +461,29 @@ exports.newsLetter = async (
     res.status(400).json({ message: error.message });
   }
 };
+
+// Delete account contorller
+
+exports.deleteAccount = catchAsync(
+  async (req: Request, res: Response, next: NextFunction) => {
+
+    const { email } = req.body;
+
+    if (!email) {
+      throw new AppError("Please provide an email address", 400);
+    } else {
+
+      const user = await User.findOneAndUpdate({ email }, { $set: { deleted: true } });
+
+      if (!user) {
+        throw new AppError("A user with this Emai does not exist", 400);
+      } else {
+        res.status(200).json({
+          status: "success",
+          message: "User deleted successfully",
+        });
+      }
+    }
+  }
+);
+

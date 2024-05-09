@@ -30,6 +30,7 @@ export interface Iuser {
   passwordResetTokenExpires: Date;
   dateBirth: String;
   profile?: String;
+  deleted: Boolean;
 }
 
 //user schema
@@ -95,6 +96,10 @@ const UserSchema = new Schema<Iuser>({
     type: Schema.Types.ObjectId,
     ref: "Profile",
     required: false,
+  },
+  deleted: {
+    type: Boolean,
+    default: false,
   },
 });
 

@@ -35,6 +35,53 @@ passport.use(
   )
 );
 
+// passport.use(
+//   new GoogleStrategy(
+//     {
+//       clientID: process.env.GOOGLE_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//       callbackURL: process.env.GOOGLE_CALLBACK_URL,
+//       scope: ["profile", "email"],
+//     },
+//     async (
+//       _accessToken: any,
+//       _refreshToken: any,
+//       profile: {
+//         id: any;
+//         displayName: any;
+//         emails: { value: any }[];
+//         photos: { value: any }[];
+//         _json: { locale: any };
+//       },
+//       done: (arg0: unknown, arg1: null) => any
+//     ) => {
+//       try {
+//         // Check if user already exists in the database
+//         const existingUser = await User.findOne({ googleId: profile.id });
+
+//         if (existingUser) {
+//           return done(null, existingUser);
+//         }
+//         // Create a new user with Google profile information
+//         const newUser = await User.create({
+//           userName: profile.displayName,
+//           email: profile.emails[0].value,
+//           googleId: profile.id,
+//           language: profile._json.locale,
+//           welcome: "hello",
+//           profileImage: {
+//             url: profile.photos[0].value,
+//           },
+//         });
+
+//         return done(null, newUser);
+//       } catch (error) {
+//         return done(error, null);
+//       }
+//     }
+//   )
+// );
+
 passport.use(
   new GoogleStrategy(
     {
@@ -56,25 +103,29 @@ passport.use(
       done: (arg0: unknown, arg1: null) => any
     ) => {
       try {
-        // Check if user already exists in the database
-        const existingUser = await User.findOne({ googleId: profile.id });
+        // Check if user already exists by email
+        let user = await User.findOne({ email: profile.emails[0].value });
 
-        if (existingUser) {
-          return done(null, existingUser);
+        if (!user) {
+          // User doesn't exist, create a new user with Google profile information
+          user = await User.create({
+            userName: profile.displayName,
+            email: profile.emails[0].value,
+            googleId: profile.id,
+            language: profile._json.locale,
+            welcome: "hello",
+            profileImage: {
+              url: profile.photos[0].value,
+            },
+          });
+        } else if (!user.googleId) {
+          // User exists but doesn't have a Google ID, update their information
+          user.googleId = profile.id;
+          user.profileImage.url = profile.photos[0].value;
+          await user.save();
         }
-        // Create a new user with Google profile information
-        const newUser = await User.create({
-          userName: profile.displayName,
-          email: profile.emails[0].value,
-          googleId: profile.id,
-          language: profile._json.locale,
-          welcome: "hello",
-          profileImage: {
-            url: profile.photos[0].value,
-          },
-        });
 
-        return done(null, newUser);
+        return done(null, user); // Return the user object
       } catch (error) {
         return done(error, null);
       }
