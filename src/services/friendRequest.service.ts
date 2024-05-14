@@ -203,8 +203,8 @@ export const getFriendRequestsService = async (userId: string) => {
     .find({
       $or: [{ from: userId }, { to: userId }],
     })
-    .populate("from", "userName")
-    .populate("to", "userName")
+    .populate("from")
+    .populate("to")
     .exec();
 
   if (!friendRequests) {
