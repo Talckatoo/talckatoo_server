@@ -14,6 +14,7 @@ const messageRouter = require("./src/routes/message-router");
 const accountRouter = require("./src/routes/account-router");
 const groupsRoute = require("./src/routes/group-conversation-route");
 const RandomChats = require("./src/routes/random-chat-route");
+const cryptoRouter = require("./src/routes/crypto-router");
 const swaggerUi = require("swagger-ui-express");
 const catchAsync = require("./utils/catch-async");
 app.use(express.json());
@@ -115,6 +116,11 @@ app.use(
   passport.authenticate(["jwt"], { session: true }),
   RandomChats
 );
+app.use(
+  "/api/v1/keys",
+  passport.authenticate(["jwt"], { session: true }),
+  cryptoRouter
+);
 
 // handle requests that do not exist on our server
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
@@ -124,5 +130,5 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 app.use(globalErrorHandler);
-export { };
+export {};
 module.exports = app;

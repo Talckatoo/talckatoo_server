@@ -1,6 +1,10 @@
 // classes from mongoose
 import { Schema, model } from "mongoose";
 
+import { generateUserKeys } from "../../utils/signal-generator";
+import { SignalProtocolStore } from "./../../utils/signal-store";
+import { UserKey } from "./userKey-model";
+
 //import jwt to create tokens for user
 const jwt = require("jsonwebtoken");
 
@@ -31,6 +35,8 @@ export interface Iuser {
   dateBirth: String;
   profile?: String;
   deleted: Boolean;
+
+  generateAndStoreKeys(): Promise<void>;
 }
 
 //user schema
@@ -108,6 +114,38 @@ UserSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
+});
+
+UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
+  const userId = this._id;
+  // Generate user keys
+  const { registrationId, identityKeyPair, oneTimePreKeys, signedPreKey } =
+    await generateUserKeys();
+
+  console.log({
+    registrationId,
+    identityKeyPair,
+    oneTimePreKeys,
+    signedPreKey,
+  });
+  const userKey = await UserKey.create({
+    userId,
+    registrationId,
+    identityKeyPair,
+    signedPreKey,
+    oneTimePreKeys,
+  });
+
+  console.log(userKey);
+};
+
+UserSchema.post("save", async function (doc: Iuser, next: Function) {
+  try {
+    await doc.generateAndStoreKeys();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 UserSchema.methods.createJWT = function () {
