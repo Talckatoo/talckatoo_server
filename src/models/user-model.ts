@@ -119,24 +119,13 @@ UserSchema.pre("save", async function (next) {
 UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
   const userId = this._id;
   // Generate user keys
-  const { registrationId, identityKeyPair, oneTimePreKeys, signedPreKey } =
-    await generateUserKeys();
+  const { registrationId, identityKeyPair } = await generateUserKeys();
 
-  console.log({
-    registrationId,
-    identityKeyPair,
-    oneTimePreKeys,
-    signedPreKey,
-  });
   const userKey = await UserKey.create({
     userId,
     registrationId,
     identityKeyPair,
-    signedPreKey,
-    oneTimePreKeys,
   });
-
-  console.log(userKey);
 };
 
 UserSchema.post("save", async function (doc: Iuser, next: Function) {
