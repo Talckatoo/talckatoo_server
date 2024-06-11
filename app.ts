@@ -20,6 +20,9 @@ app.use(express.json());
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
 import uploadRouter from "./src/routes/upload-router";
+
+const cryptoRouter = require("./src/routes/crypto-router");
+
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 const port: number = Number(process.env.PORT) || 8000;
 import multer from "multer";
@@ -115,6 +118,11 @@ app.use(
   passport.authenticate(["jwt"], { session: true }),
   RandomChats
 );
+app.use(
+  "/api/v1/keys",
+  passport.authenticate(["jwt"], { session: true }),
+  cryptoRouter
+);
 
 // handle requests that do not exist on our server
 app.all("*", (req: Request, res: Response, next: NextFunction) => {
@@ -124,5 +132,5 @@ app.all("*", (req: Request, res: Response, next: NextFunction) => {
   });
 });
 app.use(globalErrorHandler);
-export { };
+export {};
 module.exports = app;
