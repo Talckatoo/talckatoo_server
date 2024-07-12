@@ -5,6 +5,8 @@ import { UserKey } from "./userKey-model";
 //import jwt to create tokens for user
 const jwt = require("jsonwebtoken");
 
+const elliptic = require("elliptic");
+
 // check to see if email is in its valid format
 const validator = require("validator");
 
@@ -115,18 +117,13 @@ UserSchema.pre("save", async function (next) {
 
 UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
   const userId = this._id;
-  // Generate user keys
-  const { publicKey, privateKey } = crypto.generateKeyPairSync("rsa", {
-    modulusLength: 2048,
-    publicKeyEncoding: {
-      type: "spki",
-      format: "pem",
-    },
-    privateKeyEncoding: {
-      type: "pkcs8",
-      format: "pem",
-    },
-  });
+
+  const EC = elliptic.ec;
+  const ec = new EC("secp256k1");
+
+  const keyPair = ec.genKeyPair();
+  const publicKey = keyPair.getPublic("hex");
+  const privateKey = keyPair.getPrivate("hex");
 
   // need to hash the keys before save?
   await UserKey.create({
