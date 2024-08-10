@@ -15,6 +15,8 @@ const bcrypt = require("bcryptjs");
 
 const crypto = require("crypto");
 
+const cryptoJs = require("crypto-js");
+
 //user Interface
 export interface Iuser {
   userName: String;
@@ -125,11 +127,15 @@ UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
   const publicKey = keyPair.getPublic("hex");
   const privateKey = keyPair.getPrivate("hex");
 
-  // need to hash the keys before save?
+  const encryptedPrivateKey = cryptoJs.AES.encrypt(
+    privateKey,
+    process.env.KEK_SECRET
+  ).toString();
+
   await UserKey.create({
     userId,
     publicKey,
-    privateKey,
+    privateKey: encryptedPrivateKey,
   });
 };
 
