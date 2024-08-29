@@ -131,7 +131,7 @@ exports.createMessage = catchAsync(
 
     if (!voiceToVoice) {
       const message = await Message.create({
-        message: text + translate,
+        message: text,
         sender: from,
       });
 
