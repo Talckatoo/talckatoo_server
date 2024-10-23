@@ -1,8 +1,11 @@
 // classes from mongoose
 import { Schema, model } from "mongoose";
+import { UserKey } from "./userKey-model";
 
 //import jwt to create tokens for user
 const jwt = require("jsonwebtoken");
+
+const elliptic = require("elliptic");
 
 // check to see if email is in its valid format
 const validator = require("validator");
@@ -11,6 +14,8 @@ const validator = require("validator");
 const bcrypt = require("bcryptjs");
 
 const crypto = require("crypto");
+
+const cryptoJs = require("crypto-js");
 
 //user Interface
 export interface Iuser {
@@ -31,6 +36,8 @@ export interface Iuser {
   dateBirth: String;
   profile?: String;
   deleted: Boolean;
+
+  generateAndStoreKeys(): Promise<void>;
 }
 
 //user schema
@@ -108,6 +115,37 @@ UserSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
   next();
+});
+
+UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
+  const userId = this._id;
+
+  const EC = elliptic.ec;
+  const ec = new EC("secp256k1");
+
+  const keyPair = ec.genKeyPair();
+  const publicKey = keyPair.getPublic("hex");
+  const privateKey = keyPair.getPrivate("hex");
+
+  const encryptedPrivateKey = cryptoJs.AES.encrypt(
+    privateKey,
+    process.env.KEK_SECRET
+  ).toString();
+
+  await UserKey.create({
+    userId,
+    publicKey,
+    privateKey: encryptedPrivateKey,
+  });
+};
+
+UserSchema.post("save", async function (doc: Iuser, next: Function) {
+  try {
+    await doc.generateAndStoreKeys();
+    next();
+  } catch (error) {
+    next(error);
+  }
 });
 
 UserSchema.methods.createJWT = function () {
