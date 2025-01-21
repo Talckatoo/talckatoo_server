@@ -417,6 +417,7 @@ io.on("connection", (socket: Socket) => {
     io.to(roomId).emit("leaveCall", { message: "Leave room!" });
   });
 
+
   // 2. Create a room for video call
   socket.on("join", (roomId) => {
     // getting a room from the socket adapter
@@ -437,4 +438,20 @@ io.on("connection", (socket: Socket) => {
       socket.emit("full");
     }
   });
+
+  // socket to control audio
+  socket.on("toggleAudioInRoom", (data) => {
+    const { roomId, userId, isMuted } = data;
+    console.log("roomId", roomId);
+    console.log("userId", userId);
+    console.log("isMuted", isMuted);
+    
+    
+    // Broadcast to everyone in the room
+    io.to(roomId).emit("userToggleAudio", {
+      userId,
+      isMuted
+    });
+  });
+
 });
