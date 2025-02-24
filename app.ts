@@ -4,7 +4,6 @@ import swaggerDocs from "./utils/swagger";
 //
 const express = require("express");
 const app = express();
-const cors = require("cors");
 const favicon = require("express-favicon");
 const logger = require("morgan");
 const session = require("express-session");
@@ -20,17 +19,13 @@ app.use(express.json());
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
 import uploadRouter from "./src/routes/upload-router";
-
 const cryptoRouter = require("./src/routes/crypto-router");
-
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 const port: number = Number(process.env.PORT) || 8000;
 import multer from "multer";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
-
-// middleware
-// app.use(cors({ origin: true }));
+const checkIpAddress = require("./middleware/checkIpAddress");
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -74,6 +69,9 @@ app.use(upload.single("file"));
  *      200:
  *        description: App is up and running
  */
+
+// only allow access from Cloudflare IP or localhost
+app.use(checkIpAddress);
 
 app.get(
   "/",

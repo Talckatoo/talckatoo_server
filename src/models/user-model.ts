@@ -116,7 +116,6 @@ UserSchema.pre("save", async function (next) {
   this.password = await bcrypt.hash(this.password, salt);
   next();
 });
-console.log("process.env.KEK_SECRET",process.env.KEK_SECRET);
 
 UserSchema.methods.generateAndStoreKeys = async function (): Promise<void> {
   const userId = this._id;
