@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  app:
+    container_name: talckatoo-backend
+    build: .
+    ports:
+      - "8000:8000" # Map host port 3000 to container port 3000
+    environment:
+      - PORT=8000
+      - MONGO_URI=mongodb://mongo:27017/talckatoo
+      - JWT_SECRET=your_jwt_secret
+      - SOCKET_PORT=3000
+      # Add other environment variables from your .env file
+    depends_on:
+      - mongo
+    restart: unless-stopped
+
+  mongo:
+    container_name: talckatoo-mongo
+    image: mongo:6.0
+    ports:
+      - "27017:27017" # Map host port 27017 to container port 27017
+    volumes:
+      - mongo-data:/data/db # Persistent storage for MongoDB data
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
