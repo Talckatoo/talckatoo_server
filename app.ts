@@ -32,6 +32,8 @@ const upload = multer({ storage: storage });
 // middleware
 // app.use(cors({ origin: true }));
 
+console.log("MongoDB Connection String:", process.env.DATABASE);
+
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
   res.setHeader(

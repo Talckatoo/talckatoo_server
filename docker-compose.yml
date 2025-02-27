@@ -2,11 +2,10 @@ version: "3.8"
 
 services:
   backend:
-    image: talckatoo-backend:latest  # Replace with your backend image name
+    image: talckatoo-backend:latest
     ports:
-      - "8000:8000"  # Map host port 8000 to container port 8000
+      - "8000:8000"
     secrets:
-      - database_password
       - database
       - jwt_secret
       - openai_api_key
@@ -37,8 +36,7 @@ services:
       - kek_secret
     environment:
       NODE_ENV: production
-      DATABASE_PASSWORD_FILE: /run/secrets/database_password
-      DATABASE: /run/secrets/database
+      DATABASE_FILE: /run/secrets/database
       JWT_SECRET_FILE: /run/secrets/jwt_secret
       OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
       CLOUD_NAME_FILE: /run/secrets/cloud_name
@@ -67,25 +65,28 @@ services:
       ENCRYPTION_IV_FILE: /run/secrets/encryption_iv
       KEK_SECRET_FILE: /run/secrets/kek_secret
     depends_on:
-      - mongo
+      - mongo  # Use a list for depends_on
     restart: unless-stopped
 
   mongo:
     image: mongo:6.0
     ports:
-      - "27017:27017"  # Map host port 27017 to container port 27017
+      - "27017:27017"
     volumes:
-      - mongo-data:/data/db  # Persistent storage for MongoDB data
+      - mongo-data:/data/db
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/database_password
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo_root_password
     secrets:
-      - database_password
+      - mongo_root_password
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     restart: unless-stopped
 
 secrets:
-  database_password:
-    external: true
   database:
     external: true
   jwt_secret:
@@ -141,6 +142,8 @@ secrets:
   encryption_iv:
     external: true
   kek_secret:
+    external: true
+  mongo_root_password:
     external: true
 
 volumes:
