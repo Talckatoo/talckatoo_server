@@ -20,10 +20,7 @@ const RandomConversations = require("./src/models/random-chat-conversation");
 const axios = require("axios");
 dotenv.config();
 
-const DB = process?.env?.DATABASE?.replace(
-  "<password>",
-  `${process.env.DATABASE_PASSWORD}`
-);
+const DB = process?.env?.DATABASE;
 
 mongoose.set("strictQuery", true);
 

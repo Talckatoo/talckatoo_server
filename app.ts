@@ -29,8 +29,6 @@ import multer from "multer";
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-// middleware
-// app.use(cors({ origin: true }));
 
 app.use((req: Request, res: Response, next: NextFunction) => {
   res.setHeader("Access-Control-Allow-Origin", "*");

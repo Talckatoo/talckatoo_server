@@ -1,0 +1,150 @@
+version: "3.8"
+
+services:
+  backend:
+    build: .
+    ports:
+      - "8000:8000"
+    secrets:
+      - database
+      - jwt_secret
+      - openai_api_key
+      - cloud_name
+      - api_key
+      - api_secret
+      - ai_assistant_id
+      - translate_api_key
+      - api_host
+      - translate_url
+      - voice_api_key
+      - voice_api_host
+      - voice_api_url
+      - voice_params_key
+      - url
+      - nodemailer_user
+      - nodemailer_password
+      - translator_endpoint
+      - azure_translator_key
+      - aws_access_key_id
+      - aws_secret_access_key
+      - google_client_id
+      - google_client_secret
+      - google_callback_url
+      - client_url
+      - encryption_key
+      - encryption_iv
+      - kek_secret
+    environment:
+      NODE_ENV: production
+      DATABASE_FILE: /run/secrets/database
+      JWT_SECRET_FILE: /run/secrets/jwt_secret
+      OPENAI_API_KEY_FILE: /run/secrets/openai_api_key
+      CLOUD_NAME_FILE: /run/secrets/cloud_name
+      API_KEY_FILE: /run/secrets/api_key
+      API_SECRET_FILE: /run/secrets/api_secret
+      AI_ASSISTANT_ID_FILE: /run/secrets/ai_assistant_id
+      TRANSLATE_API_KEY_FILE: /run/secrets/translate_api_key
+      API_HOST_FILE: /run/secrets/api_host
+      TRANSLATE_URL_FILE: /run/secrets/translate_url
+      VOICE_API_KEY_FILE: /run/secrets/voice_api_key
+      VOICE_API_HOST_FILE: /run/secrets/voice_api_host
+      VOICE_API_URL_FILE: /run/secrets/voice_api_url
+      VOICE_PARAMS_KEY_FILE: /run/secrets/voice_params_key
+      URL_FILE: /run/secrets/url
+      NODEMAILER_USER_FILE: /run/secrets/nodemailer_user
+      NODEMAILER_PASSWORD_FILE: /run/secrets/nodemailer_password
+      TRANSLATOR_ENDPOINT_FILE: /run/secrets/translator_endpoint
+      AZURE_TRANSLATOR_KEY_FILE: /run/secrets/azure_translator_key
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key_id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_access_key
+      GOOGLE_CLIENT_ID_FILE: /run/secrets/google_client_id
+      GOOGLE_CLIENT_SECRET_FILE: /run/secrets/google_client_secret
+      GOOGLE_CALLBACK_URL_FILE: /run/secrets/google_callback_url
+      CLIENT_URL_FILE: /run/secrets/client_url
+      ENCRYPTION_KEY_FILE: /run/secrets/encryption_key
+      ENCRYPTION_IV_FILE: /run/secrets/encryption_iv
+      KEK_SECRET_FILE: /run/secrets/kek_secret
+    depends_on:
+      - mongo  # Use a list for depends_on
+    restart: unless-stopped
+
+  mongo:
+    image: mongo:6.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD_FILE: /run/secrets/mongo_root_password
+    secrets:
+      - mongo_root_password
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+secrets:
+  database:
+    external: true
+  jwt_secret:
+    external: true
+  openai_api_key:
+    external: true
+  cloud_name:
+    external: true
+  api_key:
+    external: true
+  api_secret:
+    external: true
+  ai_assistant_id:
+    external: true
+  translate_api_key:
+    external: true
+  api_host:
+    external: true
+  translate_url:
+    external: true
+  voice_api_key:
+    external: true
+  voice_api_host:
+    external: true
+  voice_api_url:
+    external: true
+  voice_params_key:
+    external: true
+  url:
+    external: true
+  nodemailer_user:
+    external: true
+  nodemailer_password:
+    external: true
+  translator_endpoint:
+    external: true
+  azure_translator_key:
+    external: true
+  aws_access_key_id:
+    external: true
+  aws_secret_access_key:
+    external: true
+  google_client_id:
+    external: true
+  google_client_secret:
+    external: true
+  google_callback_url:
+    external: true
+  client_url:
+    external: true
+  encryption_key:
+    external: true
+  encryption_iv:
+    external: true
+  kek_secret:
+    external: true
+  mongo_root_password:
+    external: true
+
+volumes:
+  mongo-data:
