@@ -67,7 +67,7 @@ npm install
 npm run dev
 ```
 
-2. Open your browser and navigate to `http://localhost:8000` to test the API.
+2. Open your browser and navigate to `http://localhost:8000` to test the API. The deployed endpoint is `https://server.talckatoo.me/`
 
 ## Technologies Used
 
