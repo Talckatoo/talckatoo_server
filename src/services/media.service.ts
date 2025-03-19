@@ -1,7 +1,7 @@
 import * as AWS from "aws-sdk";
-import * as fs from "fs";
-import * as path from "path";
 import Media from "../models/media-model";
+
+const S3_BUCKET_NAME = "talckatoobucket";
 
 export const uploadMediaService = async (
   type: any,
@@ -11,16 +11,15 @@ export const uploadMediaService = async (
   AWS.config.update({
     accessKeyId: process.env.AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: "us-east-1",
+    region: process.env.AWS_REGION,
   });
 
   let s3 = new AWS.S3();
 
   let params = {
-    Bucket: "talckatoo",
+    Bucket: S3_BUCKET_NAME,
     Body: file.buffer,
     Key: `${Date.now()}-${file.originalname}`,
-    ACL: "public-read",
   };
 
   try {
