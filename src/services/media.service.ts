@@ -21,7 +21,6 @@ export const uploadMediaService = async (
     Key: `${Date.now()}-${file.originalname}`, // Unique file name
     Body: file.buffer,
     ContentType: file.mimetype, // Set correct content type
-    ACL: "public-read", // Make file publicly accessible
   };
 
   try {
