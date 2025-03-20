@@ -74,6 +74,15 @@ const sendFriendRequestService = async (fromUserId, identifier) => {
         .populate("from", "userName")
         .populate("to", "userName")
         .exec();
+    // step 7: create a conversation between the two users
+    const conversation = await Conversation.create({
+        users: [friendRequest.from, friendRequest.to],
+        unread: [friendRequest.to],
+    });
+    // add the conversation to the users' conversations array
+    await user_model_1.default.updateOne({ _id: friendRequest.from }, { $push: { conversations: conversation._id } });
+    await user_model_1.default.updateOne({ _id: friendRequest.to }, { $push: { conversations: conversation._id } });
+    // Step 8: Return Success Message
     return {
         message: "Friend request sent successfully",
         friendRequest: friendRequestData,
@@ -134,7 +143,7 @@ const handleFriendRequestResponseService = async (userId, friendRequestId, actio
         await user_model_1.default.updateOne({ _id: friendRequest.to }, { $push: { friends: friendRequest.from } });
     }
     // get the user data from and to
-    const fromUser = await user_model_1.default.findById(friendRequest.from);
+    let fromUser = await user_model_1.default.findById(friendRequest.from);
     const toUser = await user_model_1.default.findById(friendRequest.to);
     // step5: return a message indicating the result of the operation
     return {
@@ -155,8 +164,8 @@ const getFriendRequestsService = async (userId) => {
         .find({
         $or: [{ from: userId }, { to: userId }],
     })
-        .populate("from", "userName")
-        .populate("to", "userName")
+        .populate("from")
+        .populate("to")
         .exec();
     if (!friendRequests) {
         throw new Error(ERR_INVITATION_NOT_FOUND);

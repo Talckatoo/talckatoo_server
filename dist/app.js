@@ -23,13 +23,12 @@ app.use(express.json());
 // const authRouter = require("./routes/auth-router");
 const userRouter = require("./src/routes/user-router");
 const upload_router_1 = __importDefault(require("./src/routes/upload-router"));
+const cryptoRouter = require("./src/routes/crypto-router");
 const { globalErrorHandler } = require("./src/controllers/error-controller");
 const port = Number(process.env.PORT) || 8000;
 const multer_1 = __importDefault(require("multer"));
 const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage });
-// middleware
-// app.use(cors({ origin: true }));
 app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-Origin", "*");
     res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE");
@@ -76,6 +75,7 @@ app.use("/api/v1", passport.authenticate(["jwt"], { session: true }), upload_rou
 app.use("/api/v1/", passport.authenticate(["jwt"], { session: true }), messageRouter);
 app.use("/api/v1/groups", passport.authenticate(["jwt"], { session: true }), groupsRoute);
 app.use("/api/v1/random-chats", passport.authenticate(["jwt"], { session: true }), RandomChats);
+app.use("/api/v1/keys", passport.authenticate(["jwt"], { session: true }), cryptoRouter);
 // handle requests that do not exist on our server
 app.all("*", (req, res, next) => {
     res.status(400).json({

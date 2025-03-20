@@ -80,7 +80,7 @@ exports.createMessage = catchAsync(async (req, res, next) => {
     const translate = `\n${response[0]?.text}`;
     if (!voiceToVoice) {
         const message = await Message.create({
-            message: text + translate,
+            message: text,
             sender: from,
         });
         let conversation = await Conversation.findOneAndUpdate({ users: { $all: [from, to] } }, {

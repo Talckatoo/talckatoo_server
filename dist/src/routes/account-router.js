@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express = require("express");
 const router = express.Router();
 const account_controller_1 = require("../controllers/account-controller");
-const { signUp, logIn, logOut, forgotPassword, resetPassword, loginWithGoogle, googleCallback, emailVerification, newsLetter, } = require("../controllers/account-controller");
+const { signUp, logIn, logOut, forgotPassword, resetPassword, loginWithGoogle, googleCallback, emailVerification, newsLetter, deleteAccount, } = require("../controllers/account-controller");
 /**
  * @swagger
  * components:
@@ -91,4 +91,5 @@ router.route("/reset-password/:token").post(resetPassword);
 router.route("/loginWithGoogle").get(loginWithGoogle);
 router.route("/auth/google/callback").get(googleCallback);
 router.route("/emailVerification").post(emailVerification);
+router.route("/delete-account").post(deleteAccount);
 module.exports = router;

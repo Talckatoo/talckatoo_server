@@ -19,7 +19,7 @@ const GroupMessages = require("./src/models/group-message-model");
 const RandomConversations = require("./src/models/random-chat-conversation");
 const axios = require("axios");
 dotenv.config();
-const DB = process?.env?.DATABASE?.replace("<password>", `${process.env.DATABASE_PASSWORD}`);
+const DB = process?.env?.DATABASE;
 mongoose.set("strictQuery", true);
 const listener = async () => {
     await mongoose.connect(DB, {
@@ -89,16 +89,49 @@ io.on("connection", (socket) => {
     socket.on("joinRandomChat", async (data) => {
         try {
             const { userName, profilePicture, language, id, email } = data;
-            const existingConversation = await RandomConversations.findOneAndUpdate({ user2: null }, {
-                user2: {
-                    userName,
-                    profilePicture,
-                    language,
-                    id,
-                    email,
-                    socketId: socket.id,
-                },
-            }, { new: true });
+            // Find an existing conversation where user2 is null
+            let existingConversation = await RandomConversations.findOne({
+                user2: null,
+            });
+            console.log("existingConversation", existingConversation);
+            if (existingConversation && existingConversation?.user1?.id !== id) {
+                console.log("already exists");
+                // update the user2 field in the existing conversation
+                const newConversation = await RandomConversations.findOneAndUpdate({ user2: null }, {
+                    user2: {
+                        userName,
+                        profilePicture,
+                        language,
+                        socketId: socket.id,
+                        id,
+                        email,
+                    },
+                }, { new: true });
+                console.log("socket.id", socket.id);
+                console.log("existingConversation from inside userID", existingConversation.user1.socketId);
+                // Emit event to the user who joined the random chat
+                io.to(socket.id).emit("randomResult", newConversation);
+                io.to(existingConversation.user1.socketId).emit("randomResult", newConversation);
+                await RandomConversations.deleteOne({ _id: existingConversation._id });
+                return;
+            }
+            // If the user is already in a random chat, delete the existing conversation and create a new one
+            if (existingConversation?.user1._id === id) {
+                console.log("already exists1");
+                await RandomConversations.deleteOne({ _id: existingConversation._id });
+                const newConversation = await RandomConversations.create({
+                    user1: {
+                        userName,
+                        profilePicture,
+                        language,
+                        socketId: socket.id,
+                        id,
+                        email,
+                    },
+                });
+                io.to(socket.id).emit("randomResult", newConversation);
+                return;
+            }
             if (!existingConversation) {
                 // Create a new random conversation if none exists
                 const newConversation = await RandomConversations.create({
@@ -112,13 +145,6 @@ io.on("connection", (socket) => {
                     },
                 });
                 io.to(socket.id).emit("randomResult", newConversation);
-            }
-            else {
-                // Emit event to the user who joined the random chat
-                io.to(socket.id).emit("randomResult", existingConversation);
-                io.to(existingConversation.user1.socketId).emit("randomResult", existingConversation);
-                // Delete the existing conversation
-                await RandomConversations.deleteOne({ _id: existingConversation._id });
             }
         }
         catch (error) {
@@ -143,6 +169,35 @@ io.on("connection", (socket) => {
         else {
             io.to(data.socketId).emit("getRandomMessage", data);
             io.to(socket.id).emit("getRandomMessage", data);
+        }
+    });
+    socket.on("leaveRandomChat", async (data) => {
+        const user1 = data?.randomData?.user1;
+        const user2 = data?.randomData?.user2;
+        if (user1 && user2) {
+            io.to(user1.socketId).emit("leaveRandomChat", { message: "Leave call!" });
+            io.to(user2.socketId).emit("leaveRandomChat", { message: "Leave call!" });
+            return;
+        }
+        try {
+            const { conversationId, socketId } = data;
+            if (!conversationId) {
+                return;
+            }
+            const conversation = await RandomConversations.findOne({
+                _id: conversationId,
+            });
+            if (conversation) {
+                if (conversation.user1.socketId === socketId) {
+                    await RandomConversations.deleteOne({ _id: conversationId });
+                }
+                else {
+                    await RandomConversations.findOneAndUpdate({ _id: conversationId }, { user2: null });
+                }
+            }
+        }
+        catch (error) {
+            console.log("Error leaving random chat:", error);
         }
     });
     socket.on("isTyping", (data) => {
@@ -198,10 +253,14 @@ io.on("connection", (socket) => {
         if (toFront) {
             io.to(onlineUsers.get(to)).emit("getMessage", {
                 messageReply,
+                from: from,
+                to: to,
                 sender: "AI Assistant",
             });
             io.to(onlineUsers.get(from)).emit("getMessage", {
                 messageReply,
+                from: from,
+                to: to,
                 sender: "AI Assistant",
             });
         }
@@ -293,5 +352,17 @@ io.on("connection", (socket) => {
         else {
             socket.emit("full");
         }
+    });
+    // socket to control audio
+    socket.on("toggleAudioInRoom", (data) => {
+        const { roomId, userId, isMuted } = data;
+        console.log("roomId", roomId);
+        console.log("userId", userId);
+        console.log("isMuted", isMuted);
+        // Broadcast to everyone in the room
+        io.to(roomId).emit("userToggleAudio", {
+            userId,
+            isMuted
+        });
     });
 });
