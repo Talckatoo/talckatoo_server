@@ -1,36 +1,46 @@
-import * as AWS from "aws-sdk";
+import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import Media from "../models/media-model";
 
-const S3_BUCKET_NAME = "talckatoobucket";
-
 export const uploadMediaService = async (
-  type: any,
-  file: any,
+  type: string,
+  file: Express.Multer.File,
   altText: string
 ) => {
-  AWS.config.update({
-    accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    region: process.env.AWS_REGION,
+  // Initialize S3 Client
+  const s3 = new S3Client({
+    region: process.env.AWS_REGION!,
+    credentials: {
+      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+    },
   });
 
-  let s3 = new AWS.S3();
-
-  let params = {
-    Bucket: S3_BUCKET_NAME,
+  // Set S3 upload parameters
+  const params = {
+    Bucket: process.env.S3_BUCKET_NAME!,
+    Key: `${Date.now()}-${file.originalname}`, // Unique file name
     Body: file.buffer,
-    Key: `${Date.now()}-${file.originalname}`,
+    ContentType: file.mimetype, // Set correct content type
+    ACL: "public-read", // Make file publicly accessible
   };
 
   try {
-    const uploadResult = await s3.upload(params).promise();
+    // Upload file to S3
+    await s3.send(new PutObjectCommand(params));
+
+    // Construct file URL
+    const fileUrl = `https://${process.env.S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${params.Key}`;
+
+    // Save metadata to MongoDB
     const media = await Media.create({
       type,
-      url: uploadResult.Location,
+      url: fileUrl,
       altText,
     });
+
     return media;
   } catch (error) {
-    console.log(error);
+    console.error("S3 Upload Error:", error);
+    throw new Error("File upload failed");
   }
 };
