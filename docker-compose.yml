@@ -25,8 +25,6 @@ services:
       - nodemailer_password
       - translator_endpoint
       - azure_translator_key
-      - aws_access_key_id
-      - aws_secret_access_key
       - google_client_id
       - google_client_secret
       - google_callback_url
@@ -34,6 +32,10 @@ services:
       - encryption_key
       - encryption_iv
       - kek_secret
+      - aws_access_key_id
+      - aws_secret_access_key
+      - aws_region
+      - s3_bucket_name
     environment:
       NODE_ENV: production
       DATABASE_FILE: /run/secrets/database
@@ -55,8 +57,6 @@ services:
       NODEMAILER_PASSWORD_FILE: /run/secrets/nodemailer_password
       TRANSLATOR_ENDPOINT_FILE: /run/secrets/translator_endpoint
       AZURE_TRANSLATOR_KEY_FILE: /run/secrets/azure_translator_key
-      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key_id
-      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_access_key
       GOOGLE_CLIENT_ID_FILE: /run/secrets/google_client_id
       GOOGLE_CLIENT_SECRET_FILE: /run/secrets/google_client_secret
       GOOGLE_CALLBACK_URL_FILE: /run/secrets/google_callback_url
@@ -64,6 +64,10 @@ services:
       ENCRYPTION_KEY_FILE: /run/secrets/encryption_key
       ENCRYPTION_IV_FILE: /run/secrets/encryption_iv
       KEK_SECRET_FILE: /run/secrets/kek_secret
+      AWS_ACCESS_KEY_ID_FILE: /run/secrets/aws_access_key_id
+      AWS_SECRET_ACCESS_KEY_FILE: /run/secrets/aws_secret_access_key
+      AWS_REGION_FILE: /run/secrets/aws_region
+      S3_BUCKET_NAME_FILE: /run/secrets/s3_bucket_name
     depends_on:
       - mongo  # Use a list for depends_on
     restart: unless-stopped
@@ -125,10 +129,6 @@ secrets:
     external: true
   azure_translator_key:
     external: true
-  aws_access_key_id:
-    external: true
-  aws_secret_access_key:
-    external: true
   google_client_id:
     external: true
   google_client_secret:
@@ -145,6 +145,13 @@ secrets:
     external: true
   mongo_root_password:
     external: true
-
+  aws_access_key_id:
+    external: true
+  aws_secret_access_key:
+    external: true
+  aws_region:
+    external: true
+  s3_bucket_name:
+    external: true
 volumes:
   mongo-data:
