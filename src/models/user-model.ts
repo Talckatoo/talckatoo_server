@@ -44,7 +44,6 @@ export interface Iuser {
 const UserSchema = new Schema<Iuser>({
   userName: {
     type: String,
-    unique: true,
     required: [true, "please enter a username"],
     minLength: 5,
   },
